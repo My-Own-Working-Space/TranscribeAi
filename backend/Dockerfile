@@ -1,43 +1,32 @@
 # ──────────────────────────────────────────────────────────────────────
 #  TranscribeAI — Backend Dockerfile
-#  Multi-stage build · Non-root user · Health check
+#  Single-stage build for Render compatibility
 # ──────────────────────────────────────────────────────────────────────
 
-# ── Stage 1: Builder ──────────────────────────────────────────────────
-FROM python:3.10-slim AS builder
+FROM python:3.10-slim
 
+# System deps (build tools for whisper + runtime deps)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ build-essential python3-dev git \
     rustc cargo pkg-config libssl-dev \
+    ffmpeg curl \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /build
+WORKDIR /app
+
+# Install Python deps
 COPY requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
     pip install --no-cache-dir \
     torch==2.1.2+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html && \
-    pip install --no-cache-dir -r requirements.txt && \
-    cp -r /usr/local/lib/python3.10/site-packages /install_packages
+    pip install --no-cache-dir -r requirements.txt
 
-# ── Stage 2: Runtime ─────────────────────────────────────────────────
-FROM python:3.10-slim
-
-# System deps (ffmpeg for audio processing)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy Python packages from builder
-COPY --from=builder /install_packages /usr/local/lib/python3.10/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copy app code
+COPY . .
+RUN mkdir -p temp_uploads temp_tts
 
 # Non-root user
-RUN useradd --create-home appuser
-WORKDIR /app
-
-COPY . .
-RUN mkdir -p temp_uploads temp_tts && chown -R appuser:appuser /app
-
+RUN useradd --create-home appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000

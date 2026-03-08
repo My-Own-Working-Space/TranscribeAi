@@ -9,6 +9,7 @@ import {
   Send, RefreshCw, ArrowLeft, Languages, Heart, Mail,
   PanelRightClose, PanelRightOpen, Copy, ChevronDown, ChevronUp,
   User, CreditCard, Crown, Shield, MessageCircle, Sun, Moon,
+  ServerCrash, SearchX, WifiOff, Home,
 } from 'lucide-react';
 
 const LangContext = createContext<{ lang: string; toggle: () => void }>({ lang: 'vi', toggle: () => { } });
@@ -123,6 +124,88 @@ function ToastContainer() {
 }
 
 const toast = (m: string, t: 'success' | 'info' | 'error' = 'info') => _showToast?.(m, t);
+
+
+/* ── Error Pages ─────────────────────────────────────────────────── */
+
+function NotFoundPage({ navigate }: { navigate: (to: string) => void }) {
+  const { lang } = useLang();
+  return (
+    <section className="error-page">
+      <div className="error-page-content">
+        <SearchX className="error-page-icon" />
+        <h1 className="error-page-code">404</h1>
+        <h2 className="error-page-title">{t('err_404_title', lang)}</h2>
+        <p className="error-page-desc">{t('err_404_desc', lang)}</p>
+        <button className="btn-primary" onClick={() => navigate('/')}>
+          <Home className="w-4 h-4" /> {t('err_go_home', lang)}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ServerErrorPage({ navigate, code = 500 }: { navigate: (to: string) => void; code?: number }) {
+  const { lang } = useLang();
+  return (
+    <section className="error-page">
+      <div className="error-page-content">
+        <ServerCrash className="error-page-icon" />
+        <h1 className="error-page-code">{code}</h1>
+        <h2 className="error-page-title">{t('err_500_title', lang)}</h2>
+        <p className="error-page-desc">{t('err_500_desc', lang)}</p>
+        <div className="error-page-actions">
+          <button className="btn-primary" onClick={() => window.location.reload()}>
+            <RefreshCw className="w-4 h-4" /> {t('err_retry', lang)}
+          </button>
+          <button className="btn-ghost" onClick={() => navigate('/')}>
+            <Home className="w-4 h-4" /> {t('err_go_home', lang)}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function NetworkErrorPage({ navigate: _nav }: { navigate: (to: string) => void }) {
+  const { lang } = useLang();
+  return (
+    <section className="error-page">
+      <div className="error-page-content">
+        <WifiOff className="error-page-icon" />
+        <h1 className="error-page-code">!</h1>
+        <h2 className="error-page-title">{t('err_network_title', lang)}</h2>
+        <p className="error-page-desc">{t('err_network_desc', lang)}</p>
+        <button className="btn-primary" onClick={() => window.location.reload()}>
+          <RefreshCw className="w-4 h-4" /> {t('err_retry', lang)}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; navigate: (to: string) => void },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; navigate: (to: string) => void }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary]', error, info.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <ServerErrorPage navigate={this.props.navigate} code={500} />;
+    }
+    return this.props.children;
+  }
+}
 
 
 function useRouter() {
@@ -1483,13 +1566,18 @@ function App() {
   else if (path === '/profile' && user) page = <ProfilePage navigate={navigate} />;
   else if (path === '/pricing') page = <PricingPage navigate={navigate} />;
   else if (path === '/feedback') page = <FeedbackPage navigate={navigate} />;
+  else if (path === '/error/500') page = <ServerErrorPage navigate={navigate} />;
+  else if (path === '/error/network') page = <NetworkErrorPage navigate={navigate} />;
   else if (jobId && user) page = <ResultsPage navigate={navigate} jobId={jobId} />;
-  else page = <LandingPage navigate={navigate} />;
+  else if (path === '/') page = <LandingPage navigate={navigate} />;
+  else page = <NotFoundPage navigate={navigate} />;
 
   return (
     <div className="min-h-screen">
       <Navbar navigate={navigate} />
-      {page}
+      <ErrorBoundary navigate={navigate}>
+        {page}
+      </ErrorBoundary>
       <ToastContainer />
     </div>
   );

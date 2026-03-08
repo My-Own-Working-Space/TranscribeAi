@@ -18,9 +18,18 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
     (res) => res,
     (err) => {
-        if (err.response?.status === 401 && window.location.pathname !== '/login') {
+        if (!err.response) {
+            // Network error — server unreachable
+            if (window.location.pathname !== '/error/network') {
+                window.history.pushState({}, '', '/error/network');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+            }
+        } else if (err.response.status === 401 && window.location.pathname !== '/login') {
             supabase.auth.signOut();
             window.location.href = '/login';
+        } else if (err.response.status >= 500 && window.location.pathname !== '/error/500') {
+            window.history.pushState({}, '', '/error/500');
+            window.dispatchEvent(new PopStateEvent('popstate'));
         }
         return Promise.reject(err);
     }

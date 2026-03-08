@@ -186,6 +186,16 @@ const translations = {
   fb_success: { vi: 'Cảm ơn bạn đã góp ý! 💛', en: 'Thanks for your feedback! 💛' },
   fb_fail: { vi: 'Gửi thất bại, thử lại sau', en: 'Failed to send, try again later' },
   fb_empty: { vi: 'Vui lòng nhập nội dung góp ý', en: 'Please enter your feedback' },
+
+  // Error pages
+  err_404_title: { vi: 'Không tìm thấy trang', en: 'Page not found' },
+  err_404_desc: { vi: 'Trang bạn đang tìm không tồn tại hoặc đã bị xóa.', en: 'The page you\'re looking for doesn\'t exist or has been removed.' },
+  err_500_title: { vi: 'Lỗi hệ thống', en: 'Something went wrong' },
+  err_500_desc: { vi: 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.', en: 'An unexpected error occurred. Please try again later.' },
+  err_network_title: { vi: 'Mất kết nối', en: 'Connection lost' },
+  err_network_desc: { vi: 'Không thể kết nối đến máy chủ. Kiểm tra lại kết nối mạng của bạn.', en: 'Unable to reach the server. Check your internet connection.' },
+  err_go_home: { vi: 'Về trang chủ', en: 'Go home' },
+  err_retry: { vi: 'Thử lại', en: 'Try again' },
 } as const;
 
 export type TKey = keyof typeof translations;
