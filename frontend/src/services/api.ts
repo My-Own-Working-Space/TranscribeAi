@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { supabase } from './supabase';
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/api/v2';
+const RENDER_URL = 'https://transcribeai-iwaj.onrender.com';
+const baseUrl = import.meta.env.VITE_API_URL
+  || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : RENDER_URL);
+const API_BASE = baseUrl + '/api/v2';
 const api = axios.create({ baseURL: API_BASE });
 
 api.interceptors.request.use(async (config) => {
@@ -50,7 +53,7 @@ export const aiApi = {
     chatHistory: (jobId: string) => api.get(`/jobs/${jobId}/chat/history`),
     getActions: (jobId: string) => api.get(`/jobs/${jobId}/actions`),
     extractActions: (jobId: string) => api.post(`/jobs/${jobId}/actions/extract`),
-    updateAction: (jobId: string, actionId: string, data: any) =>
+    updateAction: (jobId: string, actionId: string, data: { is_completed: boolean }) =>
         api.patch(`/jobs/${jobId}/actions/${actionId}`, data),
 };
 
