@@ -16,3 +16,4 @@ httpx>=0.25.0
 gotrue>=1.0.0
 groq>=0.4.0
 supabase>=2.0.0
+numpy<2
