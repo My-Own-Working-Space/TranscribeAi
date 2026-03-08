@@ -5,7 +5,10 @@ const RENDER_URL = 'https://transcribeai-iwaj.onrender.com';
 const baseUrl = import.meta.env.VITE_API_URL
   || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : RENDER_URL);
 const API_BASE = baseUrl + '/api/v2';
-const api = axios.create({ baseURL: API_BASE });
+const api = axios.create({
+  baseURL: API_BASE,
+  withCredentials: false,
+});
 
 api.interceptors.request.use(async (config) => {
     const { data: { session } } = await supabase.auth.getSession();

@@ -37,12 +37,15 @@ app = FastAPI(
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
+    # Skip security headers for CORS preflight
+    if request.method == "OPTIONS":
+        return response
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' https://*.supabase.co;"
+        "connect-src 'self' https://*.supabase.co https://transcribeai-iwaj.onrender.com;"
     )
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -95,7 +98,7 @@ app.include_router(v2_router, prefix="/api/v2")
 async def health_check(request: Request):
     # Basic check for everyone
     status = {"status": "healthy"}
-    
+
     # Detailed check only for local or potentially authenticated admins later
     if settings.DEBUG or request.client.host == "127.0.0.1":
         status.update({

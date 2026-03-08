@@ -26,6 +26,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
         "https://transcribeai-iwaj.onrender.com",
+        "https://transcribe-ai-six.vercel.app",
     ]
 
     TTS_DEFAULT_VOICE: str = "en-US-AriaNeural"
