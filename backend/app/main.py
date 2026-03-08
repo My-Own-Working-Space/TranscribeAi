@@ -33,35 +33,37 @@ app = FastAPI(
     redoc_url="/redoc" if settings.DEBUG else None,
 )
 
-# ─── Security Headers Middleware ───
+# ─── Catch-all error handler INSIDE CORS middleware ───
+# This must be added BEFORE CORSMiddleware so it's INSIDE in the stack.
+# Starlette's @app.exception_handler(Exception) runs in ServerErrorMiddleware
+# which is OUTSIDE CORSMiddleware, so 500 responses lose CORS headers.
+# By catching here, the error response flows back through CORSMiddleware.
 @app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
-    # Skip security headers for CORS preflight
-    if request.method == "OPTIONS":
-        return response
-    response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: https:; "
-        "connect-src 'self' https://*.supabase.co https://transcribeai-iwaj.onrender.com;"
-    )
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+async def catch_all_errors(request: Request, call_next):
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        logger.error("Unhandled exception: %s", exc, exc_info=True)
+        response = JSONResponse(
+            status_code=500,
+            content={"error": "internal_error", "detail": "An internal error occurred."},
+        )
+    # Security headers (skip for preflight)
+    if request.method != "OPTIONS":
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
-# Restricted CORS - Don't allow '*' with credentials
+# ─── CORS ───
 origins = settings.ALLOWED_ORIGINS
-if "*" in origins:
-    logger.warning("Wildcard CORS detected. In production, this should be restricted.")
+logger.info("CORS allowed origins: %s", origins)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -83,11 +85,10 @@ async def file_too_large(_request: Request, _exc):
         "detail": f"File exceeds the {settings.MAX_FILE_SIZE_MB}MB limit.",
     })
 
-
-@app.exception_handler(Exception)
-async def global_exception_handler(_request: Request, exc: Exception):
-    logger.error("Unhandled exception: %s", exc, exc_info=True)
-    return JSONResponse(status_code=500, content={"error": "internal_error", "detail": "An internal error occurred."})
+# NOTE: No @app.exception_handler(Exception) here! That handler runs in
+# ServerErrorMiddleware (OUTSIDE CORSMiddleware), so 500 responses would
+# lose CORS headers. Instead, errors are caught by catch_all_errors middleware
+# which sits INSIDE CORSMiddleware.
 
 
 app.include_router(api_router, prefix="/api/v1")

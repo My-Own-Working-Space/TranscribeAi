@@ -11,7 +11,23 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger("transcribeai.auth")
 settings = get_settings()
-supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
+
+# Lazy Supabase client — avoids crash at import time if env vars are missing
+_supabase_client: Optional[Client] = None
+
+def _get_supabase() -> Optional[Client]:
+    global _supabase_client
+    if _supabase_client is None:
+        if settings.SUPABASE_URL and settings.SUPABASE_ANON_KEY:
+            try:
+                _supabase_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
+            except Exception as e:
+                logger.error("Failed to create Supabase client: %s", e)
+                return None
+        else:
+            logger.warning("SUPABASE_URL or SUPABASE_ANON_KEY not set")
+            return None
+    return _supabase_client
 
 
 def _decode_jwt_local(token: str) -> Optional[str]:
@@ -34,8 +50,11 @@ def _decode_jwt_local(token: str) -> Optional[str]:
 
 def _decode_jwt_remote(token: str) -> Optional[str]:
     """Verify JWT via Supabase Auth API (slow fallback, requires network)."""
+    client = _get_supabase()
+    if not client:
+        return None
     try:
-        res = supabase.auth.get_user(token)
+        res = client.auth.get_user(token)
         if res and res.user:
             return str(res.user.id)
         return None
@@ -60,8 +79,11 @@ def get_user_by_id(db: Session, user_id: str) -> Optional[User]:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         # Fallback profile sync if DB trigger missed something
+        client = _get_supabase()
+        if not client:
+            return None
         try:
-            res = supabase.from_("profiles").select("*").eq("id", user_id).execute()
+            res = client.from_("profiles").select("*").eq("id", user_id).execute()
             if res.data:
                 data = res.data[0]
                 user = User(
