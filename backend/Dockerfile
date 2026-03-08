@@ -7,12 +7,16 @@
 FROM python:3.10-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc build-essential python3-dev \
+    gcc g++ build-essential python3-dev git \
+    rustc cargo pkg-config libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
 COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir --prefix=/install \
+    torch==2.1.2+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html && \
+    pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # ── Stage 2: Runtime ─────────────────────────────────────────────────
 FROM python:3.10-slim
