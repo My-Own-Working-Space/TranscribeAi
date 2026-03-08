@@ -1,142 +1,167 @@
-# TranscribeAI
+<div align="center">
 
-Multi-agent speech-to-text transcription system using MCP-style tools.
+# 🎙️ TranscribeAI
+
+**AI Meeting & Lecture Assistant** — transcribe, summarize, chat, and extract action items from any audio.
+
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi)](https://fastapi.tiangolo.com)
+[![Whisper](https://img.shields.io/badge/OpenAI-Whisper-412991?logo=openai)](https://github.com/openai/whisper)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
+
+</div>
+
+---
+
+## What It Does
+
+Upload audio/video → AI transcribes with timestamps → generates summary, answers questions about the content, and extracts action items from meetings. Built as a SaaS with user accounts, usage tracking, and plan tiers.
+
+---
+
+## Architecture
+
+```
+┌──────────┐       ┌──────────────────────────────────────────┐
+│  Browser │       │           TranscribeAI Backend           │
+│  (React) │◄─────►│                                          │
+│  :5173   │       │  FastAPI (:8000)                         │
+└──────────┘       │  ├── /api/v1/*          → Legacy API     │
+                   │  ├── /api/v2/auth       → JWT Auth       │
+                   │  ├── /api/v2/jobs       → Job Management │
+                   │  ├── /api/v2/jobs/:id/* → AI Features    │
+                   │  └── /health            → System Status  │
+                   │                                          │
+                   │  Services:                               │
+                   │  • Whisper STT (transcription)           │
+                   │  • Groq LLM (summary, chat, actions)     │
+                   │  • Edge TTS (text-to-speech)             │
+                   │  • SQLite DB (users, jobs, AI data)      │
+                   └──────────────────────────────────────────┘
+```
+
+---
 
 ## Features
 
-- 🎙️ **Multi-agent transcription** - Combines results from multiple transcription engines
-- 🔧 **MCP-style tools** - Modular, extensible tool architecture
-- ⚡ **FastAPI backend** - High-performance async REST API
-- 🎯 **Confidence-weighted merging** - Intelligent result aggregation
+- **AI Transcription** — Whisper models with per-segment confidence scores, 99+ languages
+- **AI Summary** — Auto-generated summaries with key points (standard / meeting / lecture modes)
+- **AI Chat** — Ask questions about your transcript, get answers with timestamp references
+- **Action Items** — Extract tasks, assignees, deadlines from meetings
+- **User Auth** — JWT-based registration/login with plan tiers (free/pro/enterprise)
+- **Usage Tracking** — Monthly minute quotas with enforcement
+- **Export** — SRT subtitles, TXT, JSON
+- **Text-to-Speech** — 300+ voices via Edge TTS
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19 + TypeScript + Vite |
+| Backend | FastAPI + Pydantic v2 + SQLAlchemy |
+| STT | OpenAI Whisper |
+| LLM | Groq API (Llama 3.3 70B) |
+| TTS | Edge TTS |
+| Database | SQLite (MVP) |
+| Auth | JWT + bcrypt |
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/your-username/TranscribeAi.git
+cd TranscribeAi
+cp .env.example .env    # Add your GROQ_API_KEY
+./scripts/dev.sh        # Auto-creates venv, installs deps, starts both services
+```
+
+- **Web UI**: http://localhost:5173
+- **API Docs**: http://localhost:8000/docs
+
+### Manual Setup
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cd backend && ../.venv/bin/uvicorn app.main:app --reload
+cd frontend && npm install && npm run dev
+```
+
+---
+
+## API
+
+### V2 (SaaS)
+
+```
+POST   /api/v2/auth/register
+POST   /api/v2/auth/login
+GET    /api/v2/auth/me
+
+POST   /api/v2/jobs/              Upload + transcribe
+GET    /api/v2/jobs/              List jobs
+GET    /api/v2/jobs/dashboard     Usage stats
+GET    /api/v2/jobs/:id           Job detail
+DELETE /api/v2/jobs/:id           Delete job
+
+GET    /api/v2/jobs/:id/summary            AI summary
+POST   /api/v2/jobs/:id/summary/regenerate Regenerate
+POST   /api/v2/jobs/:id/chat               Ask question
+GET    /api/v2/jobs/:id/chat/history        Chat history
+GET    /api/v2/jobs/:id/actions             Action items
+POST   /api/v2/jobs/:id/actions/extract     Extract actions
+PATCH  /api/v2/jobs/:id/actions/:aid        Update action
+```
+
+### V1 (Legacy)
+
+```
+POST   /api/v1/transcribe/              Upload audio
+GET    /api/v1/transcribe/status/:id    Poll status
+GET    /api/v1/export/:id?format=srt    Download SRT/TXT/JSON
+POST   /api/v1/tts/generate             Text-to-speech
+GET    /api/v1/tts/voices               List voices
+```
+
+---
 
 ## Project Structure
 
 ```
 TranscribeAi/
-├── app/
-│   ├── main.py              # FastAPI entry point
-│   ├── config.py            # Environment settings
-│   ├── schemas.py           # Pydantic data models
+├── backend/app/
+│   ├── main.py
+│   ├── config.py
+│   ├── database.py
+│   ├── models/
+│   ├── schemas.py
 │   ├── api/
-│   │   └── transcribe.py    # REST endpoints
-│   ├── mcp/
-│   │   ├── orchestrator.py  # Agent coordinator
-│   │   └── tools/           # Transcription tools
-│   │       ├── transcribe_raw.py
-│   │       ├── transcribe_context.py
-│   │       ├── transcribe_external.py
-│   │       └── merge_transcript.py
+│   │   ├── v1/endpoints/      (transcribe, export, tts)
+│   │   └── v2/endpoints/      (auth, jobs, ai)
 │   └── services/
-│       ├── audio_loader.py  # Audio processing
-│       └── storage.py       # File storage
+│       ├── transcription_service.py
+│       ├── auth_service.py
+│       ├── llm_service.py
+│       ├── summary_service.py
+│       ├── chat_service.py
+│       ├── action_service.py
+│       ├── srt_service.py
+│       └── tts_service.py
+├── frontend/src/
+│   ├── App.tsx
+│   ├── services/api.ts
+│   └── index.css
 ├── scripts/
-│   └── run_local.sh         # Local development script
-├── tests/
-│   └── test_merge.py        # Unit tests
+│   ├── dev.sh
+│   └── setup.sh
+├── .env.example
 ├── requirements.txt
-└── .env.example
+└── README.md
 ```
 
-## Requirements
-
-- Python 3.11+
-- FFmpeg (for audio processing)
-
-## Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd TranscribeAi
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# or
-.\venv\Scripts\activate   # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy environment file
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-## Usage
-
-### Development Server
-
-```bash
-# Using the run script
-chmod +x scripts/run_local.sh
-./scripts/run_local.sh
-
-# Or directly with uvicorn
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Health check |
-| `POST` | `/api/v1/transcribe` | Upload audio for transcription |
-| `GET` | `/api/v1/transcribe/{job_id}` | Get transcription status/result |
-| `DELETE` | `/api/v1/transcribe/{job_id}` | Cancel transcription job |
-
-### Example Request
-
-```bash
-curl -X POST "http://localhost:8000/api/v1/transcribe" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@audio.wav" \
-  -F "language=en"
-```
-
-## Testing
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=app --cov-report=html
-
-# Run specific test file
-pytest tests/test_merge.py -v
-```
-
-## Configuration
-
-See `.env.example` for available configuration options.
-
-## Architecture
-
-### MCP Tools
-
-The system uses MCP (Model Context Protocol) style tools for transcription:
-
-1. **transcribe_raw** - Local model, no context, high throughput
-2. **transcribe_context** - Context-aware with vocabulary hints
-3. **transcribe_external** - External API delegation (cloud services)
-4. **merge_transcript** - Combines results from multiple agents
-
-### Orchestrator
-
-The `MCPOrchestrator` coordinates multiple transcription agents:
-- Parallel execution across agents
-- Confidence-weighted result merging
-- Graceful error handling and fallbacks
+---
 
 ## License
 
-MIT License
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
+MIT

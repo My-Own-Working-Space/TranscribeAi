@@ -18,7 +18,7 @@ HOST="${HOST:-0.0.0.0}"
 PORT="${PORT:-8000}"
 RELOAD="${RELOAD:-true}"
 
-echo "🚀 Starting TranscribeAI server..."
+echo "   Starting TranscribeAI server..."
 echo "   Host: $HOST"
 echo "   Port: $PORT"
 echo "   Reload: $RELOAD"
@@ -26,7 +26,7 @@ echo "   Reload: $RELOAD"
 # Use virtual environment
 PYTHON=".venv/bin/python"
 if [ ! -f "$PYTHON" ]; then
-    echo "❌ Virtual environment not found. Run: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
+    echo "Virtual environment not found. Run: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
     exit 1
 fi
 
