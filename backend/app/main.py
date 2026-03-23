@@ -57,7 +57,8 @@ async def catch_all_errors(request: Request, call_next):
     return response
 
 # ─── CORS ───
-origins = settings.ALLOWED_ORIGINS
+origins = ["*"]  # Temporarily allow all origins
+# origins = settings.ALLOWED_ORIGINS
 logger.info("CORS allowed origins: %s", origins)
 
 app.add_middleware(

@@ -187,7 +187,7 @@ const translations = {
   fb_fail: { vi: 'Gửi thất bại, thử lại sau', en: 'Failed to send, try again later' },
   fb_empty: { vi: 'Vui lòng nhập nội dung góp ý', en: 'Please enter your feedback' },
 
-  // Error pages
+  // ─── Error pages ───
   err_404_title: { vi: 'Không tìm thấy trang', en: 'Page not found' },
   err_404_desc: { vi: 'Trang bạn đang tìm không tồn tại hoặc đã bị xóa.', en: 'The page you\'re looking for doesn\'t exist or has been removed.' },
   err_500_title: { vi: 'Lỗi hệ thống', en: 'Something went wrong' },
@@ -196,12 +196,39 @@ const translations = {
   err_network_desc: { vi: 'Không thể kết nối đến máy chủ. Kiểm tra lại kết nối mạng của bạn.', en: 'Unable to reach the server. Check your internet connection.' },
   err_go_home: { vi: 'Về trang chủ', en: 'Go home' },
   err_retry: { vi: 'Thử lại', en: 'Try again' },
+
+  // ─── Privacy ───
+  privacy_title: { vi: 'Chính sách bảo mật', en: 'Privacy Policy' },
+  privacy_update: { vi: 'Cập nhật lần cuối: 23/03/2026', en: 'Last updated: March 23, 2026' },
+  privacy_intro: {
+    vi: 'Chào mừng bạn đến với TranscribeAI. Chúng tôi cam kết bảo vệ quyền riêng tư và dữ liệu cá nhân của bạn.',
+    en: 'Welcome to TranscribeAI. We are committed to protecting your privacy and personal data.'
+  },
+  privacy_sec1_title: { vi: '1. Dữ liệu chúng tôi thu thập', en: '1. Data We Collect' },
+  privacy_sec1_desc: {
+    vi: 'Chúng tôi chỉ thu thập email để định danh tài khoản và các file âm thanh bạn tải lên để xử lý transcription. File âm thanh sẽ được xóa sau khi xử lý xong hoặc theo yêu cầu của bạn.',
+    en: 'We only collect your email for account identification and the audio files you upload for transcription processing. Audio files are deleted after processing or upon your request.'
+  },
+  privacy_sec2_title: { vi: '2. Cách chúng tôi sử dụng dữ liệu', en: '2. How We Use Data' },
+  privacy_sec2_desc: {
+    vi: 'Dữ liệu của bạn được sử dụng duy nhất để cung cấp dịch vụ chuyển đổi ngôn ngữ và cải thiện trải nghiệm người dùng. Chúng tôi không bán dữ liệu cho bên thứ ba.',
+    en: 'Your data is used solely to provide transcription services and improve user experience. We do not sell your data to third parties.'
+  },
+
+  // ─── Docs ───
+  docs_title: { vi: 'Tài liệu API', en: 'API Documentation' },
+  docs_subtitle: { vi: 'Hướng dẫn tích hợp TranscribeAI vào ứng dụng của bạn', en: 'Guide to integrate TranscribeAI into your applications' },
+  docs_coming_soon: { vi: 'Tài liệu chi tiết đang được cập nhật. Vui lòng liên hệ support@transcribeai.com để được hỗ trợ sớm nhất.', en: 'Detailed documentation is being updated. Please contact support@transcribeai.com for early access.' },
+
+  // ─── Login Validation ───
+  login_empty_error: { vi: 'Vui lòng nhập email và mật khẩu', en: 'Please enter both email and password' },
 } as const;
 
 export type TKey = keyof typeof translations;
 
 export function t(key: TKey, lang: string): string {
   const entry = translations[key];
+  if (!entry) return key; // Fallback to key if not found
   return lang === 'vi' ? entry.vi : entry.en;
 }
 

@@ -9,7 +9,7 @@ import {
   Send, RefreshCw, ArrowLeft, Languages, Heart, Mail,
   PanelRightClose, PanelRightOpen, Copy, ChevronDown, ChevronUp,
   User, CreditCard, Crown, Shield, MessageCircle, Sun, Moon,
-  ServerCrash, SearchX, WifiOff, Home,
+  Server, ServerCrash, SearchX, WifiOff, Home,
 } from 'lucide-react';
 
 const LangContext = createContext<{ lang: string; toggle: () => void }>({ lang: 'vi', toggle: () => { } });
@@ -98,7 +98,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
 interface ToastMsg { id: string; message: string; type: 'success' | 'info' | 'error'; }
-let _showToast: (msg: string, type: 'success' | 'info' | 'error') => void = () => {};
+let _showToast: (msg: string, type: 'success' | 'info' | 'error') => void = () => { };
 
 function ToastContainer() {
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
@@ -327,6 +327,10 @@ function LoginPage({ navigate }: { navigate: (to: string) => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      toast(t('login_empty_error', lang), 'error');
+      return;
+    }
     setLoading(true);
     try {
       await login(email, password);
@@ -480,7 +484,7 @@ function DashboardPage({ navigate }: { navigate: (to: string) => void }) {
       .then(([j, s]) => { setJobs(j.data); setStats(s.data); })
       .catch(() => toast(t('dash_load_fail', lang), 'error'))
       .finally(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const deleteJob = async (id: string) => {
@@ -872,6 +876,51 @@ function FeedbackSection() {
 }
 
 
+function DocsPage({ navigate }: { navigate: (to: string) => void }) {
+  const { lang } = useLang();
+  return (
+    <section className="section">
+      <div className="section-label"><Server className="w-3 h-3" /> {t('docs_title', lang)}</div>
+      <h2 className="section-title">{t('docs_title', lang)}</h2>
+      <p className="subtitle">{t('docs_subtitle', lang)}</p>
+      <div className="auth-card" style={{ maxWidth: '800px', margin: '40px auto', textAlign: 'left' }}>
+        <p>{t('docs_coming_soon', lang)}</p>
+      </div>
+      <button className="btn-ghost" onClick={() => navigate('/')} style={{ marginTop: '24px' }}>
+        <ArrowLeft className="w-4 h-4" /> {t('err_go_home', lang)}
+      </button>
+    </section>
+  );
+}
+
+function PrivacyPage({ navigate }: { navigate: (to: string) => void }) {
+  const { lang } = useLang();
+  return (
+    <section className="section">
+      <div className="section-label"><Shield className="w-3 h-3" /> {t('privacy_title', lang)}</div>
+      <h2 className="section-title">{t('privacy_title', lang)}</h2>
+      <p className="subtitle" style={{ marginBottom: '8px' }}>{t('privacy_intro', lang)}</p>
+      <p className="text-muted" style={{ marginBottom: '40px', fontSize: '13px' }}>{t('privacy_update', lang)}</p>
+
+      <div className="auth-card" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
+        <div style={{ marginBottom: '32px' }}>
+          <h3 style={{ marginBottom: '12px', fontSize: '18px', color: 'var(--accent)' }}>{t('privacy_sec1_title', lang)}</h3>
+          <p style={{ lineHeight: '1.6', color: 'var(--foreground)', opacity: 0.8 }}>{t('privacy_sec1_desc', lang)}</p>
+        </div>
+        <div>
+          <h3 style={{ marginBottom: '12px', fontSize: '18px', color: 'var(--accent)' }}>{t('privacy_sec2_title', lang)}</h3>
+          <p style={{ lineHeight: '1.6', color: 'var(--foreground)', opacity: 0.8 }}>{t('privacy_sec2_desc', lang)}</p>
+        </div>
+      </div>
+
+      <button className="btn-ghost" onClick={() => navigate('/')} style={{ marginTop: '32px' }}>
+        <ArrowLeft className="w-4 h-4" /> {t('err_go_home', lang)}
+      </button>
+    </section>
+  );
+}
+
+
 function StudioPage({ navigate }: { navigate: (to: string) => void }) {
   const { lang } = useLang();
   const [file, setFile] = useState<File | null>(null);
@@ -932,7 +981,7 @@ function StudioPage({ navigate }: { navigate: (to: string) => void }) {
       } catch { /* retry */ }
     }, 1000);
     return () => clearInterval(iv);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, jobId]);
 
   return (
@@ -1121,7 +1170,7 @@ function ResultsPage({ navigate, jobId }: { navigate: (to: string) => void; jobI
       finally { setLoading(false); }
     };
     loadJob();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMsgs]);
@@ -1529,9 +1578,9 @@ function LandingPage({ navigate }: { navigate: (to: string) => void }) {
       <footer>
         <div className="footer-logo">TranscribeAI</div>
         <div className="footer-links">
-          <a href="/pricing">Pricing</a>
-          <a href="/docs">API Docs</a>
-          <a href="#">Privacy</a>
+          <button className="btn-link" onClick={() => navigate('/pricing')}>{t('nav_pricing', lang)}</button>
+          <button className="btn-link" onClick={() => navigate('/docs')}>API Docs</button>
+          <button className="btn-link" onClick={() => navigate('/privacy')}>{t('privacy_title', lang)}</button>
         </div>
       </footer>
     </>
@@ -1553,7 +1602,7 @@ function App() {
     if (!user && ['/dashboard', '/studio', '/profile'].includes(path)) navigate('/login');
     if (!user && path.startsWith('/results/')) navigate('/login');
     if (user && (path === '/login' || path === '/register')) navigate('/dashboard');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, path, loading]);
 
   if (loading) return <div className="page-loader"><Loader2 className="w-10 h-10 animate-spin text-accent" /></div>;
@@ -1565,6 +1614,8 @@ function App() {
   else if (path === '/studio' && user) page = <StudioPage navigate={navigate} />;
   else if (path === '/profile' && user) page = <ProfilePage navigate={navigate} />;
   else if (path === '/pricing') page = <PricingPage navigate={navigate} />;
+  else if (path === '/docs') page = <DocsPage navigate={navigate} />;
+  else if (path === '/privacy') page = <PrivacyPage navigate={navigate} />;
   else if (path === '/feedback') page = <FeedbackPage navigate={navigate} />;
   else if (path === '/error/500') page = <ServerErrorPage navigate={navigate} />;
   else if (path === '/error/network') page = <NetworkErrorPage navigate={navigate} />;
