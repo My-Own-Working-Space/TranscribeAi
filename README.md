@@ -1,66 +1,169 @@
-# 🎙️ TranscribeAi: Real-Time Meeting Assistant
+<div align="center">
 
-TranscribeAi is a powerful, locally-hosted meeting assistant and transcription tool. It transforms your browser (Google Meet, YouTube, etc.) into a smart recording studio with real-time transcription and AI-powered note-taking.
+# 🎙️ TranscribeAI
 
-> [!WARNING]
-> **Current Status: Experimental.** 
-> The Chrome Extension is currently in active development. Audio capture stability and UI synchronization may occasionally fail during dynamic page reloads.
+**AI Meeting & Lecture Assistant** — transcribe, summarize, chat, and extract action items from any audio.
 
----
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi)](https://fastapi.tiangolo.com)
+[![Whisper](https://img.shields.io/badge/OpenAI-Whisper-412991?logo=openai)](https://github.com/openai/whisper)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 
-## 🚀 Key Features
-
-- **Real-Time Transcription**: Powered by `faster-whisper` (Local STT).
-- **Notion-Style Sidebar**: A 600px split-view interface for live transcripts and manual notes.
-- **Smart Notes (Groq AI)**: Automatically transforms transcripts into structured headings and bullet points using Llama-3 (Groq).
-- **Universal Capture**: Works on Google Meet, YouTube, and potentially any browser tab.
-- **Export**: Save your meeting notes as clean Markdown (`.md`) files.
+</div>
 
 ---
 
-## 🏗️ Architecture
+## What It Does
 
-The project consists of two main components:
-
-1.  **Chrome Extension (Manifest v3)**:
-    - Located in `/extension/`.
-    - Uses an **Offscreen Document** for `tabCapture` to comply with modern Chrome standards.
-    - Injects a responsive sidebar into the webpage.
-2.  **Streaming Backend (FastAPI)**:
-    - Located in `/backend/`.
-    - Handles WebSocket connections and pipes audio data to the transcription engine.
-    - Integrates Groq for high-speed AI processing.
+Upload audio/video → AI transcribes with timestamps → generates summary, answers questions about the content, and extracts action items from meetings. Built as a SaaS with user accounts, usage tracking, and plan tiers.
 
 ---
 
-## 🛠️ Setup Instructions
+## Architecture
 
-### 1. Backend (Python 3.10+)
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
-# Start the server
-uvicorn app.main:app --reload
 ```
-*Note: Ensure `ffmpeg` is installed on your system.*
+┌──────────┐       ┌──────────────────────────────────────────┐
+│  Browser │       │           TranscribeAI Backend           │
+│  (React) │◄─────►│                                          │
+│  :5173   │       │  FastAPI (:8000)                         │
+└──────────┘       │  ├── /api/v1/*          → Legacy API     │
+                   │  ├── /api/v2/auth       → JWT Auth       │
+                   │  ├── /api/v2/jobs       → Job Management │
+                   │  ├── /api/v2/jobs/:id/* → AI Features    │
+                   │  └── /health            → System Status  │
+                   │                                          │
+                   │  Services:                               │
+                   │  • Whisper STT (transcription)           │
+                   │  • Groq LLM (summary, chat, actions)     │
+                   │  • Edge TTS (text-to-speech)             │
+                   │  • SQLite DB (users, jobs, AI data)      │
+                   └──────────────────────────────────────────┘
+```
 
-### 2. Extension
-1. Open Chrome and go to `chrome://extensions/`.
+---
+
+## Features
+
+- **AI Transcription** — Whisper models with per-segment confidence scores, 99+ languages
+- **AI Summary** — Auto-generated summaries with key points (standard / meeting / lecture modes)
+- **AI Chat** — Ask questions about your transcript, get answers with timestamp references
+- **Action Items** — Extract tasks, assignees, deadlines from meetings
+- **User Auth** — JWT-based registration/login with plan tiers (free/pro/enterprise)
+- **Usage Tracking** — Monthly minute quotas with enforcement
+- **Export** — SRT subtitles, TXT, JSON
+- **Text-to-Speech** — 300+ voices via Edge TTS
+- **Real-Time Sidebar (Extension)** — Injects a Notion-style assistant into Google Meet & YouTube for live, captioned notes.
+
+---
+
+## 🔌 Chrome Extension
+
+The **TranscribeAi Sidebar** is a Manifest v3 extension that enables direct browser-tab audio capture.
+
+- **Split-View UI**: 600px sidebar with simultaneous Transcript and Notes columns.
+- **Offscreen Processing**: Complies with Chrome security by using Offscreen Documents for `tabCapture`.
+- **Smart Formatting**: Periodically uses Groq (Llama-3) to transform raw speech into structured bullet points.
+
+**To Install:**
+1. Go to `chrome://extensions/`.
 2. Enable **Developer mode**.
-3. Click **Load unpacked** and select the `/extension` folder.
-4. Refresh your meeting tab (YouTube or Google Meet).
+3. **Load unpacked** from the `/extension` directory.
 
 ---
 
-## 🚧 Known Issues & Troubleshooting
+## Tech Stack
 
-- **"Invalid Data" Errors**: Usually caused by starting the recorder before the WebSocket is ready. We've implemented a sync-fix, but if it persists, try stopping and restarting the recording.
-- **Sidebar Visibility**: If the sidebar doesn't appear after 3 seconds, click the extension icon and use the popup "Open/Close" button.
-- **Latency**: Transcription speed depends on your CPU/GPU performance (tested best with `base` model).
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19 + TypeScript + Vite |
+| Backend | FastAPI + Pydantic v2 + SQLAlchemy |
+| STT | OpenAI Whisper |
+| LLM | Groq API (Llama 3.3 70B) |
+| TTS | Edge TTS |
+| Database | SQLite (MVP) |
+| Auth | JWT + bcrypt |
 
 ---
 
-## 📜 License
+## Quick Start
+
+```bash
+git clone https://github.com/your-username/TranscribeAi.git
+cd TranscribeAi
+cp .env.example .env    # Add your GROQ_API_KEY
+./scripts/dev.sh        # Auto-creates venv, installs deps, starts both services
+```
+
+- **Web UI**: http://localhost:5173
+- **API Docs**: http://localhost:8000/docs
+
+### Manual Setup
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cd backend && ../.venv/bin/uvicorn app.main:app --reload
+cd frontend && npm install && npm run dev
+```
+
+---
+
+## API
+
+### V2 (SaaS)
+
+```
+POST   /api/v2/auth/register
+POST   /api/v2/auth/login
+GET    /api/v2/auth/me
+
+POST   /api/v2/jobs/              Upload + transcribe
+GET    /api/v2/jobs/              List jobs
+GET    /api/v2/jobs/dashboard     Usage stats
+GET    /api/v2/jobs/:id           Job detail
+DELETE /api/v2/jobs/:id           Delete job
+
+GET    /api/v2/jobs/:id/summary            AI summary
+POST   /api/v2/jobs/:id/summary/regenerate Regenerate
+POST   /api/v2/jobs/:id/chat               Ask question
+GET    /api/v2/jobs/:id/chat/history        Chat history
+GET    /api/v2/jobs/:id/actions             Action items
+POST   /api/v2/jobs/:id/actions/extract     Extract actions
+PATCH  /api/v2/jobs/:id/actions/:aid        Update action
+```
+
+### V1 (Legacy)
+
+```
+POST   /api/v1/transcribe/              Upload audio
+GET    /api/v1/transcribe/status/:id    Poll status
+GET    /api/v1/export/:id?format=srt    Download SRT/TXT/JSON
+POST   /api/v1/tts/generate             Text-to-speech
+GET    /api/v1/tts/voices               List voices
+```
+
+---
+
+## Project Structure
+
+```
+TranscribeAi/
+├── backend/app/
+│   ├── main.py
+│   ├── config.py
+│   ├── ws/             (New: Real-time WebSockets)
+│   └── services/       (STT, AI Intelligence, etc.)
+├── extension/          (New: Chrome Sidebar Extension)
+│   ├── manifest.json
+│   ├── src/            (background, content, offscreen)
+│   └── styles/         (sidebar.css)
+├── frontend/src/       (Legacy Web UI)
+├── scripts/
+├── .env.example
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## License
+
 MIT
