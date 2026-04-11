@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = ""
 
     GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""

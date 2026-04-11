@@ -1,0 +1,53 @@
+{
+    "manifest_version": 3,
+    "name": "TranscribeAi Meet",
+    "version": "1.0",
+    "description": "Real-time transcription for Google Meet powered by TranscribeAi",
+    "permissions": [
+        "tabCapture",
+        "activeTab",
+        "scripting",
+        "storage",
+        "offscreen"
+    ],
+    "host_permissions": [
+        "*://meet.google.com/*",
+        "*://www.youtube.com/*",
+        "*://youtube.com/*",
+        "*://*.google.com/*"
+    ],
+    "action": {
+        "default_title": "Open TranscribeAi Sidebar",
+        "default_popup": "ui/popup.html"
+    },
+    "background": {
+        "service_worker": "src/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://meet.google.com/*",
+                "*://www.youtube.com/*",
+                "*://youtube.com/*"
+            ],
+            "js": [
+                "src/contentScript.js"
+            ],
+            "css": [
+                "styles/sidebar.css"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "assets/*",
+                "src/offscreen.html",
+                "src/offscreen.js"
+            ],
+            "matches": [
+                "https://meet.google.com/*"
+            ]
+        }
+    ]
+}

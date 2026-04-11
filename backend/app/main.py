@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1 import api_router
 from app.api.v2 import v2_router
+from app.ws.transcribe import router as ws_router
 from app.config import get_settings
 from app.database import init_db
 
@@ -94,6 +95,7 @@ async def file_too_large(_request: Request, _exc):
 
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(v2_router, prefix="/api/v2")
+app.include_router(ws_router, prefix="/ws")
 
 
 @app.get("/health", tags=["system"])
