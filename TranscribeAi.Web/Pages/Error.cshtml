@@ -1,0 +1,26 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="auth-container animate-in" style="max-width: 600px; text-align: center;">
+    <div class="auth-card">
+        <div style="font-size: 4rem; margin-bottom: 24px;">⚠️</div>
+        <h1 class="auth-title">Something went wrong</h1>
+        <p class="auth-subtitle">An error occurred while processing your request.</p>
+
+        @if (Model.ShowRequestId)
+        {
+            <div style="margin: 20px 0; padding: 12px; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); font-family: monospace; font-size: 0.8rem; color: var(--text-muted);">
+                Request ID: <strong>@Model.RequestId</strong>
+            </div>
+        }
+
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 32px;">
+            Our team has been notified. If the problem persists, please contact support.
+        </p>
+
+        <a href="/" class="btn btn-primary" style="width: 100%; justify-content: center;">Return Home</a>
+    </div>
+</div>

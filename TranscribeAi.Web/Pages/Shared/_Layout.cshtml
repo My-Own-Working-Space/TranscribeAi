@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — TranscribeAI</title>
+    <meta name="description" content="AI Speech-to-Text SaaS — Transcribe, summarize, and analyze audio with AI." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <!-- ═══ Navigation ═══ -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="nav-brand" href="/">
+                <span class="brand-icon">🎙️</span>
+                <span class="brand-text">TranscribeAI</span>
+            </a>
+
+            <div class="nav-links">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a href="/Jobs" class="nav-link">📋 My Jobs</a>
+                    <a href="/Jobs/Create" class="nav-link nav-link--primary">➕ New Transcription</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/Dashboard" class="nav-link">🛡️ Admin</a>
+                    }
+                    <div class="nav-user">
+                        <a href="/Account/Profile" class="nav-link">👤 @User.Identity.Name</a>
+                        <form method="post" asp-page="/Account/Logout" class="nav-logout-form">
+                            <button type="submit" class="nav-link nav-link--subtle">Logout</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="nav-link">Login</a>
+                    <a href="/Account/Register" class="nav-link nav-link--primary">Get Started</a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ Main Content ═══ -->
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <!-- ═══ Footer ═══ -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; @DateTime.UtcNow.Year TranscribeAI — AI-Powered Speech Intelligence</p>
+        </div>
+    </footer>
+
+    <!-- ═══ Scripts ═══ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

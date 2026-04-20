@@ -1,0 +1,13 @@
+global using TranscribeAi.BusinessObject.Entities;
+global using TranscribeAi.BusinessObject.Enums;
+global using TranscribeAi.DataAccessLayer.Repositories.Interfaces;
+global using TranscribeAi.Services.Configuration;
+global using TranscribeAi.Services.DTOs;
+global using TranscribeAi.Services.Interfaces;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using System.Text.Json;
+global using System.Threading.Tasks;
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;

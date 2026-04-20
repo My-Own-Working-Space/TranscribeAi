@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TranscribeAi.BusinessObject\TranscribeAi.BusinessObject.csproj" />
+    <ProjectReference Include="..\TranscribeAi.DataAccessLayer\TranscribeAi.DataAccessLayer.csproj" />
+    <ProjectReference Include="..\TranscribeAi.Services\TranscribeAi.Services.csproj" />
+    <ProjectReference Include="..\TranscribeAi.Worker\TranscribeAi.Worker.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

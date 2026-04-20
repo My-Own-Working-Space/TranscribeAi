@@ -1,0 +1,63 @@
+@page
+@model TranscribeAi.Web.Pages.Admin.AuditLogModel
+@{
+    ViewData["Title"] = "Security Audit Log";
+}
+
+<div class="animate-in">
+    <div class="card-header" style="margin-bottom: 32px;">
+        <div>
+            <h1 class="card-title" style="font-size: 2rem;">📜 Security Audit Log</h1>
+            <p style="color: var(--text-secondary); margin-top: 4px;">Tracking critical user and system actions for security compliance.</p>
+        </div>
+        <a asp-page="./Dashboard" class="btn btn-secondary">⬅ Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th>IP / Client</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model.Logs)
+                    {
+                        <tr>
+                            <td style="font-size: 0.8rem; white-space: nowrap;">
+                                <div style="color: var(--text-primary);">@log.Timestamp.ToLocalTime().ToString("MMM dd, HH:mm:ss")</div>
+                                <div style="color: var(--text-muted);">@log.Timestamp.ToLocalTime().ToString("yyyy")</div>
+                            </td>
+                            <td>
+                                <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis;" title="@log.UserId">
+                                    @log.UserId
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid var(--border-color);">
+                                    @log.Action
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem; max-width: 400px; color: var(--text-secondary);">
+                                    @log.Details
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.75rem; color: var(--text-primary); font-family: monospace;">@log.IpAddress</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="@log.UserAgent">
+                                    @log.UserAgent
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

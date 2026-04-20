@@ -1,0 +1,32 @@
+@page
+@model PrivacyModel
+@{
+    ViewData["Title"] = "Privacy Policy";
+}
+
+<div class="animate-in" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header" style="margin-bottom: 32px;">
+        <h1 class="card-title" style="font-size: 2.5rem;">🔒 Privacy Policy</h1>
+    </div>
+
+    <div class="card" style="line-height: 1.8;">
+        <section style="margin-bottom: 32px;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 12px; color: var(--accent-primary);">1. Data we Collect</h2>
+            <p>We collect audio files, transcripts, and metadata you provide to deliver our core transcription and AI summarization services. User data is encrypted at rest and in transit.</p>
+        </section>
+
+        <section style="margin-bottom: 32px;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 12px; color: var(--accent-primary);">2. AI Processing</h2>
+            <p>Our service uses Groq Cloud API (Whisper and Llama models) for processing. By using this service, you agree to allow temporary processing of your files by these models. Files are deleted from our temporary storage after processing completes or after 24 hours.</p>
+        </section>
+
+        <section style="margin-bottom: 32px;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 12px; color: var(--accent-primary);">3. Security</h2>
+            <p>We implement industry-standard security measures, including rate limiting, audit logging, and strict authorization headers to protect your data.</p>
+        </section>
+
+        <div style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--text-muted);">
+            Last updated: @DateTime.UtcNow.ToString("MMMM dd, yyyy")
+        </div>
+    </div>
+</div>

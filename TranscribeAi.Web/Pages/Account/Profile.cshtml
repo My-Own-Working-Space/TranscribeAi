@@ -1,0 +1,95 @@
+@page
+@model TranscribeAi.Web.Pages.Account.ProfileModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="animate-in">
+    <div class="card-header" style="margin-bottom: 32px;">
+        <h1 class="card-title" style="font-size: 2rem;">👤 Account Profile</h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <div class="alert alert-success">@Model.StatusMessage</div>
+    }
+
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start;">
+        <!-- Profile Form -->
+        <div class="card">
+            <h2 class="card-title" style="margin-bottom: 24px; font-size: 1.1rem;">Personal Information</h2>
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="form-group">
+                    <label asp-for="Input.FullName" class="form-label"></label>
+                    <input asp-for="Input.FullName" class="form-input" />
+                    <span asp-validation-for="Input.FullName" class="form-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                    <input asp-for="Input.PhoneNumber" class="form-input" placeholder="+123456789" />
+                    <span asp-validation-for="Input.PhoneNumber" class="form-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address (Primary Login)</label>
+                    <input class="form-input" value="@User.Identity?.Name" disabled style="opacity: 0.6; cursor: not-allowed;" />
+                    <p class="upload-zone-hint">Login email cannot be changed through this interface.</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 8px;">Save Changes</button>
+            </form>
+        </div>
+
+        <!-- Usage & Plan -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div class="card">
+                <h2 class="card-title" style="margin-bottom: 16px; font-size: 1.1rem;">Current Plan</h2>
+                <div class="badge badge-completed" style="margin-bottom: 16px; font-size: 0.9rem; padding: 8px 16px;">
+                    ✨ @Model.Stats.Plan Plan
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+                    Your account is currently on the <strong>@Model.Stats.Plan</strong> plan.
+                </p>
+                <div style="margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
+                        <span style="color: var(--text-secondary);">Monthly Usage</span>
+                        <span style="color: var(--text-primary);">@Model.Stats.MinutesUsedThisMonth / @Model.Stats.MinutesLimit mins</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        @{
+                            var percent = (double)Model.Stats.MinutesUsedThisMonth / Model.Stats.MinutesLimit * 100;
+                            if (percent > 100) percent = 100;
+                        }
+                        <div class="progress-bar-fill" style="width: @(percent)%"></div>
+                    </div>
+                </div>
+                <a href="#" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center; margin-top: 24px;">Upgrade Plan</a>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title" style="margin-bottom: 16px; font-size: 1.1rem;">Quick Stats</h2>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm);">
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Total Jobs</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">@Model.Stats.TotalJobs</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm);">
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Completed</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">@Model.Stats.CompletedJobs</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm);">
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Transcription Time</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">@Model.Stats.TotalMinutesTranscribed m</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

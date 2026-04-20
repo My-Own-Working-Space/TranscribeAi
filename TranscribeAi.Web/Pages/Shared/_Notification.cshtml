@@ -1,0 +1,15 @@
+@if (TempData["success"] != null)
+{
+    <div class="alert alert-success animate-in" style="position: fixed; top: 80px; right: 24px; z-index: 1000; min-width: 300px; box-shadow: var(--shadow-lg);">
+        <span>✅ @TempData["success"]</span>
+        <button type="button" class="btn-close" style="float: right; background: none; border: none; color: inherit; cursor: pointer;" onclick="this.parentElement.remove()">✕</button>
+    </div>
+}
+
+@if (TempData["error"] != null)
+{
+    <div class="alert alert-danger animate-in" style="position: fixed; top: 80px; right: 24px; z-index: 1000; min-width: 300px; box-shadow: var(--shadow-lg);">
+        <span>❌ @TempData["error"]</span>
+        <button type="button" class="btn-close" style="float: right; background: none; border: none; color: inherit; cursor: pointer;" onclick="this.parentElement.remove()">✕</button>
+    </div>
+}

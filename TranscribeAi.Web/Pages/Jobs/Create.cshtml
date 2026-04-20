@@ -1,0 +1,78 @@
+@page
+@model TranscribeAi.Web.Pages.Jobs.CreateModel
+@{
+    ViewData["Title"] = "New Transcription";
+}
+
+<div class="animate-in" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header" style="margin-bottom: 32px;">
+        <div>
+            <h1 class="card-title" style="font-size: 2rem;">🎙️ New Transcription</h1>
+            <p style="color: var(--text-secondary); margin-top: 4px;">Upload your audio or video file to start transcribing.</p>
+        </div>
+        <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="uploadForm">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="upload-zone" id="dropZone">
+                <div class="upload-zone-icon">☁️</div>
+                <h3 class="upload-zone-text">Click to upload or drag and drop</h3>
+                <p class="upload-zone-hint">
+                    MP3, WAV, M4A, MP4, MKV (Max 200MB)
+                </p>
+                <input type="file" asp-for="Input.File" id="fileInput" style="display: none;" accept="audio/*,video/*" />
+            </div>
+            <div id="fileInfo" style="display: none; margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.5rem;">📄</span>
+                    <div>
+                        <div id="fileName" style="font-weight: 500; font-size: 0.9rem;"></div>
+                        <div id="fileSize" style="font-size: 0.75rem; color: var(--text-muted);"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="removeFile">Remove</button>
+            </div>
+            <span asp-validation-for="Input.File" class="form-error" style="display: block; margin-top: 8px;"></span>
+        </div>
+
+        <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+            <div class="form-group">
+                <label asp-for="Input.Mode" class="form-label">Transcription Mode</label>
+                <select asp-for="Input.Mode" class="form-select">
+                    <option value="Standard">Standard (General dynamic conversation)</option>
+                    <option value="Meeting">Meeting (Business/Formal with clear outcomes)</option>
+                    <option value="Lecture">Lecture (Educational/Educational with definitions)</option>
+                </select>
+                <p class="upload-zone-hint">Mode affects how AI generates the summary.</p>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Input.Language" class="form-label">Language (Optional)</label>
+                <input asp-for="Input.Language" class="form-input" placeholder="e.g. en, vi, fr" />
+                <p class="upload-zone-hint">Leave blank for auto-detection.</p>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" id="submitBtn">
+            Start Transcription
+        </button>
+
+        <div class="progress-container" id="uploadProgress" style="margin-top: 24px;">
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="uploadBar" style="width: 0%;"></div>
+            </div>
+            <div class="progress-text">
+                <span id="uploadStatus">Uploading file...</span>
+                <span id="uploadPercent">0%</span>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/file-upload.js" asp-append-version="true"></script>
+}

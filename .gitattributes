@@ -1,16 +1,36 @@
-# Auto detect text files and perform LF normalization
+# Handle line endings automatically
 * text=auto
 
-# Explicitly declare files that should always be LF
-*.py text eol=lf
+# Bash scripts should always use LF
 *.sh text eol=lf
-*.md text eol=lf
-*.toml text eol=lf
-*.json text eol=lf
 
-# Global ignore for Git
-.DS_Store -text
+# Explicitly mark binary files
 *.png binary
 *.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
 *.wav binary
 *.mp3 binary
+*.flac binary
+*.ogg binary
+*.m4a binary
+*.mp4 binary
+*.mkv binary
+*.webm binary
+*.docx binary
+*.pdf binary
+
+# Marks .cshtml files as text
+*.cshtml text
+*.css text
+*.js text
+*.json text
+*.cs text
+*.xml text
+*.config text
+*.sln text eol=crlf
+*.csproj text eol=crlf

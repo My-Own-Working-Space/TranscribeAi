@@ -1,0 +1,17 @@
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Security.Claims;
+global using System.Threading.Tasks;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Mvc.RazorPages;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using TranscribeAi.BusinessObject.Entities;
+global using TranscribeAi.BusinessObject.Enums;
+global using TranscribeAi.Services.DTOs;
+global using TranscribeAi.Services.Interfaces;
+global using TranscribeAi.Services.Configuration;
+global using System.Text.Json;
