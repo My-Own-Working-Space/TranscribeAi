@@ -17,9 +17,9 @@ namespace TranscribeAi.Web.Configuration;
 public static class ServiceCollectionExtensions
 {
     /// <summary>Register EF Core with SQLite (dev) or PostgreSQL (prod).</summary>
-    public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration config, string? connectionString = null)
     {
-        var connectionString = config.GetConnectionString("DefaultConnection")
+        connectionString ??= config.GetConnectionString("DefaultConnection")
             ?? "Data Source=transcribe.db";
 
         if (connectionString.Contains("Host=") || connectionString.Contains("postgresql"))
@@ -74,7 +74,7 @@ public static class ServiceCollectionExtensions
 
     /// <summary>Register all repository and service layer dependencies.</summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services,
-        IConfiguration config)
+        IConfiguration config, string? groqApiKey = null)
     {
         // Options
         services.Configure<TranscribeAiOptions>(config.GetSection(TranscribeAiOptions.SectionName));
@@ -84,12 +84,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // HTTP Client for Groq API with retry policy
-        var groqApiKey = config.GetSection("Groq:ApiKey").Value ?? "";
+        groqApiKey ??= config.GetSection("Groq:ApiKey").Value ?? "";
         services.AddHttpClient("GroqApi", client =>
         {
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", groqApiKey);
-            client.Timeout = TimeSpan.FromMinutes(5);
+            client.Timeout = TimeSpan.FromMinutes(10);
         })
         .AddPolicyHandler(GetRetryPolicy());
 

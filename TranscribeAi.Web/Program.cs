@@ -10,10 +10,6 @@ using TranscribeAi.Web.Hubs;
 using TranscribeAi.Web.Middleware;
 using TranscribeAi.Worker.Workers;
 
-// ═══════════════════════════════════════════════════════════════
-//  TranscribeAI — ASP.NET Core 9 Razor Pages Composition Root
-// ═══════════════════════════════════════════════════════════════
-
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Serilog ──
@@ -27,9 +23,24 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // ── Database + Identity + Application Services ──
-builder.Services.AddDatabase(builder.Configuration);
+// Map legacy DATABASE_URL if present (Supabase/Render style)
+var connectionString = builder.Configuration["DATABASE_URL"] 
+                      ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
+{
+    // Convert postgres://user:pass@host:port/db to Npgsql format
+    var uri = new Uri(connectionString);
+    var userInfo = uri.UserInfo.Split(':');
+    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+}
+
+builder.Services.AddDatabase(builder.Configuration, connectionString);
 builder.Services.AddIdentityServices();
-builder.Services.AddApplicationServices(builder.Configuration);
+
+// Map legacy GROQ_API_KEY
+var groqApiKey = builder.Configuration["GROQ_API_KEY"] ?? builder.Configuration["Groq:ApiKey"];
+builder.Services.AddApplicationServices(builder.Configuration, groqApiKey);
 
 // ── Razor Pages + SignalR ──
 builder.Services.AddRazorPages(options =>
@@ -84,9 +95,6 @@ builder.Services.AddAntiforgery(options =>
 
 var app = builder.Build();
 
-// ═══════════════════════════════════════════════════════════════
-//  Middleware Pipeline
-// ═══════════════════════════════════════════════════════════════
 
 if (!app.Environment.IsDevelopment())
 {
@@ -108,10 +116,6 @@ app.MapRazorPages();
 app.MapHub<TranscriptionHub>("/hubs/transcription");
 app.MapHealthChecks("/health");
 
-// ═══════════════════════════════════════════════════════════════
-//  Database Initialization + Seed Admin
-// ═══════════════════════════════════════════════════════════════
-
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<TranscribeDbContext>();
@@ -125,7 +129,7 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
-    Log.Information("🚀 TranscribeAI v3.0.0 ready");
+    Log.Information("TranscribeAI v3.0.0 ready");
 }
 
 app.Run();
