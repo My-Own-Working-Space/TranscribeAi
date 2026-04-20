@@ -12,3 +12,4 @@ global using TranscribeAi.Services.DTOs;
 global using TranscribeAi.Services.Configuration;
 global using TranscribeAi.BusinessObject.Entities;
 global using TranscribeAi.BusinessObject.Enums;
+global using TranscribeAi.DataAccessLayer.Repositories.Interfaces;
