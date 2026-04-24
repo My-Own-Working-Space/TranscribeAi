@@ -13,6 +13,7 @@ COPY ["TranscribeAi.Worker/TranscribeAi.Worker.csproj", "TranscribeAi.Worker/"]
 COPY ["TranscribeAi.Services/TranscribeAi.Services.csproj", "TranscribeAi.Services/"]
 COPY ["TranscribeAi.DataAccessLayer/TranscribeAi.DataAccessLayer.csproj", "TranscribeAi.DataAccessLayer/"]
 COPY ["TranscribeAi.BusinessObject/TranscribeAi.BusinessObject.csproj", "TranscribeAi.BusinessObject/"]
+COPY ["TranscribeAi.Tests/TranscribeAi.Tests.csproj", "TranscribeAi.Tests/"]
 
 # Restore dependencies
 RUN dotnet restore "TranscribeAi.sln"
