@@ -96,7 +96,6 @@ builder.Services.AddAntiforgery(options =>
 });
 
 // ── Startup & Migration ──
-// We run migration in a separate task or ensure it doesn't block the initial port binding for cloud platforms like Render
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 builder.WebHost.UseUrls($"http://*:{port}");
 
@@ -122,41 +121,43 @@ app.MapRazorPages();
 app.MapHub<TranscriptionHub>("/hubs/transcription");
 app.MapHealthChecks("/health");
 
-// Run migration in a dedicated scope before starting
-using (var scope = app.Services.CreateScope())
+// Run migration in a BACKGROUND task to unblock Render port scan
+_ = Task.Run(async () =>
 {
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var db = services.GetRequiredService<TranscribeDbContext>();
-        logger.LogInformation("Starting database migration at {Time}", DateTime.UtcNow);
-        await db.Database.MigrateAsync();
-        logger.LogInformation("Database migration completed.");
-
-        // Seeds
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        foreach (var role in new[] { "User", "Admin" })
+        var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        
+        try
         {
-            if (!await roleManager.RoleExistsAsync(role))
-                await roleManager.CreateAsync(new IdentityRole(role));
+            var db = services.GetRequiredService<TranscribeDbContext>();
+            logger.LogInformation("Background: Starting database migration at {Time}", DateTime.UtcNow);
+            await db.Database.MigrateAsync();
+            logger.LogInformation("Background: Database migration completed.");
+
+            // Seeds
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            foreach (var role in new[] { "User", "Admin" })
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                    await roleManager.CreateAsync(new IdentityRole(role));
+            }
+
+            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+            var testUser = await userManager.FindByEmailAsync("user@example.com");
+            if (testUser == null)
+            {
+                testUser = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com", EmailConfirmed = true, FullName = "System Test User" };
+                await userManager.CreateAsync(testUser, "Password123!");
+                await userManager.AddToRoleAsync(testUser, "User");
+            }
         }
-
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        var testUser = await userManager.FindByEmailAsync("user@example.com");
-        if (testUser == null)
+        catch (Exception ex)
         {
-            testUser = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com", EmailConfirmed = true, FullName = "System Test User" };
-            await userManager.CreateAsync(testUser, "Password123!");
-            await userManager.AddToRoleAsync(testUser, "User");
+            logger.LogError(ex, "Background: An error occurred during startup migration/seeding.");
         }
     }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "An error occurred during startup migration/seeding.");
-        // We don't throw here to allow the app to at least start and show health check failures
-    }
-}
+});
 
 app.Run();
