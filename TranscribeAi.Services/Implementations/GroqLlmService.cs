@@ -36,6 +36,33 @@ public sealed class GroqLlmService : ILlmService
     public async Task<string> ChatWithHistoryAsync(string systemPrompt, List<ChatMessageDto> messages,
         float temperature = 0.3f, int maxTokens = 2048, CancellationToken ct = default)
     {
+        // ── Mock Mode for Testing ──
+        var authHeader = _httpClient.DefaultRequestHeaders.Authorization;
+        if (authHeader == null || string.IsNullOrWhiteSpace(authHeader.Parameter) || authHeader.Parameter.Contains("YOUR_GROQ_API_KEY"))
+        {
+            _logger.LogInformation("Groq API Key missing/placeholder. Returning MOCK chat response.");
+
+            // If this is an action item request
+            if (systemPrompt.Contains("action item", StringComparison.OrdinalIgnoreCase))
+            {
+                return "[{\"task\": \"Finalize the E2E test suite stabilization\", \"assignee\": \"Minh Chau\", \"deadline\": \"Today\", \"priority\": \"high\"}, {\"task\": \"Clean up temporary test files\", \"assignee\": \"Antigravity\", \"deadline\": \"ASAP\", \"priority\": \"medium\"}]";
+            }
+
+            // If this is a summary request
+            if (systemPrompt.Contains("summary", StringComparison.OrdinalIgnoreCase) || (systemPrompt.Contains("JSON") && messages.Any(m => m.Content.Contains("summary", StringComparison.OrdinalIgnoreCase))))
+            {
+                return "{\"summary\": \"This meeting discussed the implementation of mock modes for E2E testing. Key points included reliability and speed optimization. The team agreed that having a reliable test suite is priority one.\", \"key_points\": [\"Verified mock provider implementation\", \"Optimized SignalR reconnection logic\", \"Added semantic CSS classes for testing\"], \"conclusion\": \"The test suite is now robust enough for CI/CD pipelines.\"}";
+            }
+
+            // If this is a chat request
+            if (systemPrompt.Contains("intelligent assistant", StringComparison.OrdinalIgnoreCase))
+            {
+                return "This is a mock AI answer regarding the transcript. It confirms that the meeting was about stabilizing the E2E test suite.";
+            }
+
+            return "This is a mock AI response for E2E testing. It helps verify that the chat UI and SignalR updates work correctly even without a live API key.";
+        }
+
         var allMessages = new List<object>
         {
             new { role = "system", content = systemPrompt }

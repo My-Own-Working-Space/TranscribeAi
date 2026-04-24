@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
+    const fileInput = document.getElementById('UploadedFile');
     const fileInfo = document.getElementById('fileInfo');
     const fileNameDisplay = document.getElementById('fileName');
     const fileSizeDisplay = document.getElementById('fileSize');
@@ -19,29 +19,31 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dropZone || !fileInput) return;
 
     // ── File Selection ──
-
-    dropZone.addEventListener('click', () => fileInput.click());
+    // Click is handled natively by the #UploadedFile input which covers #dropZone (inset: 0)
 
     fileInput.addEventListener('change', (e) => {
         handleFiles(e.target.files);
     });
 
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
-    });
-
-    ['dragleave', 'dragend'].forEach(type => {
-        dropZone.addEventListener(type, () => {
-            dropZone.classList.remove('drag-over');
+    ['dragover', 'dragenter'].forEach(type => {
+        [dropZone, fileInput].forEach(el => {
+            el.addEventListener(type, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
         });
     });
 
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
+    ['dragleave', 'dragend', 'drop'].forEach(type => {
+        [dropZone, fileInput].forEach(el => {
+            el.addEventListener(type, (e) => {
+                dropZone.classList.remove('drag-over');
+            });
+        });
+    });
+
+    fileInput.addEventListener('drop', (e) => {
         if (e.dataTransfer.files.length) {
-            fileInput.files = e.dataTransfer.files;
             handleFiles(e.dataTransfer.files);
         }
     });
@@ -56,11 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (files.length === 0) return;
         const file = files[0];
 
-        fileNameDisplay.textContent = file.name;
-        fileSizeDisplay.textContent = formatBytes(file.size);
+        if (fileNameDisplay) fileNameDisplay.textContent = file.name;
+        if (fileSizeDisplay) fileSizeDisplay.textContent = formatBytes(file.size);
 
-        fileInfo.style.display = 'flex';
-        dropZone.style.display = 'none';
+        if (fileInfo) fileInfo.style.display = 'flex';
+        if (dropZone) dropZone.style.display = 'none';
     }
 
     function formatBytes(bytes, decimals = 2) {

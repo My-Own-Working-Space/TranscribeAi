@@ -85,12 +85,18 @@ public class DetailsModel : PageModel
 
     public async Task<IActionResult> OnPostChatAsync(Guid id, string question)
     {
+        _logger.LogInformation("[Chat] Received question for job {JobId}: {Question}", id, question);
         var userId = _userManager.GetUserId(User);
         if (userId == null) return Unauthorized();
 
-        if (string.IsNullOrWhiteSpace(question)) return BadRequest();
+        if (string.IsNullOrWhiteSpace(question)) 
+        {
+            _logger.LogWarning("[Chat] Question was empty for job {JobId}", id);
+            return BadRequest();
+        }
 
         var response = await _chat.AskQuestionAsync(id, userId, question);
+        _logger.LogInformation("[Chat] Generated answer for job {JobId}", id);
         return new JsonResult(response);
     }
 

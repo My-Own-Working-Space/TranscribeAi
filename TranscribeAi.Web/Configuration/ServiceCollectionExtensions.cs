@@ -55,7 +55,13 @@ public static class ServiceCollectionExtensions
                 options.User.RequireUniqueEmail = true;
             })
             .AddEntityFrameworkStores<TranscribeDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddClaimsPrincipalFactory<AppUserClaimsPrincipalFactory>();
+
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.SignIn.RequireConfirmedAccount = true;
+        });
 
         services.ConfigureApplicationCookie(options =>
         {
@@ -103,7 +109,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IActionService, ActionService>();
         services.AddScoped<IExportService, ExportService>();
         services.AddScoped<IAuditService, AuditService>();
-        services.AddScoped<IJobProgressService, SignalRJobProgressService>();
+        services.AddSingleton<IJobProgressService, SignalRJobProgressService>();
 
         return services;
     }

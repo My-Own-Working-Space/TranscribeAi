@@ -8,6 +8,7 @@ using TranscribeAi.DataAccessLayer.Repositories.Interfaces;
 using TranscribeAi.Services.Interfaces;
 using TranscribeAi.Web.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TranscribeAi.Web.Pages.Jobs;
 
@@ -40,21 +41,18 @@ public class CreateModel : PageModel
     }
 
     [BindProperty]
-    public InputModel Input { get; set; } = new();
+    [Required(ErrorMessage = "Please select a file to upload.")]
+    [Display(Name = "Audio/Video File")]
+    public IFormFile? UploadedFile { get; set; }
 
-    public class InputModel
-    {
-        [Required]
-        [Display(Name = "Audio/Video File")]
-        public IFormFile? File { get; set; }
+    [BindProperty]
+    [Display(Name = "Job Mode")]
+    public JobMode Mode { get; set; } = JobMode.Standard;
 
-        [Display(Name = "Job Mode")]
-        public JobMode Mode { get; set; } = JobMode.Standard;
-
-        [Display(Name = "Language (Optional)")]
-        [StringLength(10)]
-        public string? Language { get; set; }
-    }
+    [BindProperty]
+    [Display(Name = "Language (Optional)")]
+    [StringLength(10)]
+    public string? Language { get; set; }
 
     public void OnGet()
     {
@@ -62,13 +60,26 @@ public class CreateModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (Input.File == null || Input.File.Length == 0)
+        _logger.LogInformation("POST /Jobs/Create received. UploadedFile is null: {IsNull}, Request.Form.Files Count: {FileCount}", 
+            UploadedFile == null, Request.Form.Files.Count);
+        
+        foreach(var file in Request.Form.Files)
         {
-            ModelState.AddModelError("Input.File", "Please select a file to upload.");
+            _logger.LogInformation("Found file in Request.Form.Files: Name={Name}, FileName={FileName}, Length={Length}", 
+                file.Name, file.FileName, file.Length);
         }
 
         if (!ModelState.IsValid)
         {
+            _logger.LogWarning("ModelState is invalid. Count: {Count}", ModelState.ErrorCount);
+            foreach (var key in ModelState.Keys)
+            {
+                var entry = ModelState[key];
+                foreach (var error in entry.Errors)
+                {
+                    _logger.LogWarning("Validation Error - Key: '{Key}', Error: '{ErrorMessage}'", key, error.ErrorMessage);
+                }
+            }
             return Page();
         }
 
@@ -76,10 +87,10 @@ public class CreateModel : PageModel
         if (userId == null) return Unauthorized();
 
         // 1. Validate file extension
-        var ext = Path.GetExtension(Input.File!.FileName).ToLower().TrimStart('.');
+        var ext = Path.GetExtension(UploadedFile!.FileName).ToLower().TrimStart('.');
         if (!_options.SupportedFormats.Contains(ext))
         {
-            ModelState.AddModelError("Input.File", $"Unsupported file format. Supported: {string.Join(", ", _options.SupportedFormats)}");
+            ModelState.AddModelError(nameof(UploadedFile), $"Unsupported file format. Supported: {string.Join(", ", _options.SupportedFormats)}");
             return Page();
         }
 
@@ -88,7 +99,7 @@ public class CreateModel : PageModel
         var uploadDir = Path.Combine(_env.ContentRootPath, _options.TempUploadDir);
         if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
 
-        var fileName = $"{jobId}_{Input.File.FileName}";
+        var fileName = $"{jobId}_{UploadedFile.FileName}";
         var filePath = Path.Combine(uploadDir, fileName);
 
         var job = new TranscriptionJob
@@ -96,10 +107,10 @@ public class CreateModel : PageModel
             Id = jobId,
             UserId = userId,
             Status = JobStatus.Queued,
-            OriginalFilename = Input.File.FileName,
+            OriginalFilename = UploadedFile.FileName,
             StoragePath = filePath,
-            FileSizeBytes = (int)Input.File.Length,
-            Mode = Input.Mode
+            FileSizeBytes = (int)UploadedFile.Length,
+            Mode = Mode
         };
 
         // 3. Save file to disk
@@ -107,7 +118,7 @@ public class CreateModel : PageModel
         {
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await Input.File.CopyToAsync(stream);
+                await UploadedFile.CopyToAsync(stream);
             }
         }
         catch (Exception ex)
@@ -127,8 +138,8 @@ public class CreateModel : PageModel
             JobId = jobId,
             UserId = userId,
             FilePath = filePath,
-            Language = Input.Language,
-            Mode = Input.Mode
+            Language = Language,
+            Mode = Mode
         });
 
         _logger.LogInformation("Job {JobId} enqueued for user {UserId}", jobId, userId);

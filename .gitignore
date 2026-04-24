@@ -51,5 +51,14 @@ venv_mvp/
 
 # Testing
 TestResults/
+test-results/
+tests/
 .coverage
 htmlcov/
+
+# Temporary & Scratch
+scratch/
+cookies.txt
+temp_uploads/
+TranscribeAi.Web/temp_uploads/
+.config/

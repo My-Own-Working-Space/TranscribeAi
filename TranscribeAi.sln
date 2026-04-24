@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranscribeAi.Web", "Transcr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranscribeAi.Worker", "TranscribeAi.Worker\TranscribeAi.Worker.csproj", "{42ECF933-24A3-4ABD-9C71-33EC66E36966}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranscribeAi.Tests", "TranscribeAi.Tests\TranscribeAi.Tests.csproj", "{67A6AF84-D705-47DF-A81D-6ADC9DC4D27C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{42ECF933-24A3-4ABD-9C71-33EC66E36966}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42ECF933-24A3-4ABD-9C71-33EC66E36966}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42ECF933-24A3-4ABD-9C71-33EC66E36966}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67A6AF84-D705-47DF-A81D-6ADC9DC4D27C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67A6AF84-D705-47DF-A81D-6ADC9DC4D27C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67A6AF84-D705-47DF-A81D-6ADC9DC4D27C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67A6AF84-D705-47DF-A81D-6ADC9DC4D27C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

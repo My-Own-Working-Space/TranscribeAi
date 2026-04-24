@@ -75,6 +75,12 @@ public class RegisterModel : PageModel
             {
                 _logger.LogInformation("User created a new account with password.");
                 await _userManager.AddToRoleAsync(user, "User");
+
+                if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                {
+                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                }
+
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return LocalRedirect(returnUrl);
             }

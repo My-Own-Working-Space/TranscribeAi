@@ -24,8 +24,10 @@ builder.Host.UseSerilog();
 
 // ── Database + Identity + Application Services ──
 // Map legacy DATABASE_URL if present (Supabase/Render style)
-var connectionString = builder.Configuration["DATABASE_URL"] 
-                      ?? builder.Configuration.GetConnectionString("DefaultConnection");
+var databaseUrl = builder.Configuration["DATABASE_URL"];
+var connectionString = !string.IsNullOrWhiteSpace(databaseUrl) 
+                      ? databaseUrl 
+                      : builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
 {
@@ -119,7 +121,17 @@ app.MapHealthChecks("/health");
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<TranscribeDbContext>();
-    await db.Database.EnsureCreatedAsync();
+    Log.Information("Current Working Directory: {Cwd}", Directory.GetCurrentDirectory());
+    try 
+    {
+        await db.Database.MigrateAsync();
+        Log.Information("Database migration completed successfully.");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Database migration failed.");
+        throw;
+    }
 
     // Seed roles
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -127,6 +139,16 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole(role));
+    }
+
+    // Seed test user
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var testUser = await userManager.FindByEmailAsync("user@example.com");
+    if (testUser == null)
+    {
+        testUser = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com", EmailConfirmed = true };
+        await userManager.CreateAsync(testUser, "Password123!");
+        await userManager.AddToRoleAsync(testUser, "User");
     }
 
     Log.Information("TranscribeAI v3.0.0 ready");
