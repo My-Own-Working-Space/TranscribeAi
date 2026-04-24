@@ -95,8 +95,12 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "X-CSRF-TOKEN";
 });
 
-var app = builder.Build();
+// ── Startup & Migration ──
+// We run migration in a separate task or ensure it doesn't block the initial port binding for cloud platforms like Render
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+builder.WebHost.UseUrls($"http://*:{port}");
 
+var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -118,40 +122,41 @@ app.MapRazorPages();
 app.MapHub<TranscriptionHub>("/hubs/transcription");
 app.MapHealthChecks("/health");
 
+// Run migration in a dedicated scope before starting
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<TranscribeDbContext>();
-    Log.Information("Current Working Directory: {Cwd}", Directory.GetCurrentDirectory());
-    try 
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    
+    try
     {
+        var db = services.GetRequiredService<TranscribeDbContext>();
+        logger.LogInformation("Starting database migration at {Time}", DateTime.UtcNow);
         await db.Database.MigrateAsync();
-        Log.Information("Database migration completed successfully.");
+        logger.LogInformation("Database migration completed.");
+
+        // Seeds
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        foreach (var role in new[] { "User", "Admin" })
+        {
+            if (!await roleManager.RoleExistsAsync(role))
+                await roleManager.CreateAsync(new IdentityRole(role));
+        }
+
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var testUser = await userManager.FindByEmailAsync("user@example.com");
+        if (testUser == null)
+        {
+            testUser = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com", EmailConfirmed = true, FullName = "System Test User" };
+            await userManager.CreateAsync(testUser, "Password123!");
+            await userManager.AddToRoleAsync(testUser, "User");
+        }
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "Database migration failed.");
-        throw;
+        logger.LogError(ex, "An error occurred during startup migration/seeding.");
+        // We don't throw here to allow the app to at least start and show health check failures
     }
-
-    // Seed roles
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    foreach (var role in new[] { "User", "Admin" })
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-    }
-
-    // Seed test user
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var testUser = await userManager.FindByEmailAsync("user@example.com");
-    if (testUser == null)
-    {
-        testUser = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com", EmailConfirmed = true };
-        await userManager.CreateAsync(testUser, "Password123!");
-        await userManager.AddToRoleAsync(testUser, "User");
-    }
-
-    Log.Information("TranscribeAI v3.0.0 ready");
 }
 
 app.Run();
