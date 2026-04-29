@@ -35,7 +35,8 @@
                             var displayName = !string.IsNullOrEmpty(fullName) ? fullName : User.Identity.Name;
                         }
                         <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem; font-weight: 500;">@displayName</span>
-                        <form method="post" asp-page="/Account/Logout" class="nav-logout-form" style="display:inline;">
+                        <form method="post" action="/Account/Logout" class="nav-logout-form" style="display:inline;">
+                            @Html.AntiForgeryToken()
                             <button type="submit" class="nav-link" style="background:none; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 4px 10px; cursor:pointer;">Logout</button>
                         </form>
                         <a href="/Jobs/Create" class="btn btn-white">+ New</a>
