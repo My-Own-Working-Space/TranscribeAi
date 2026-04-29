@@ -11,7 +11,10 @@
             <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
                 <div>
                     <a asp-page="/Jobs/Index" style="text-decoration: none; font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 12px; display: block;">← Back to Projects</a>
-                    <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary);">@Model.Job.OriginalFilename</h1>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 0;">@Model.Job.OriginalFilename</h1>
+                        <span id="jobStatusBadge" class="badge badge-@Model.Job.Status.ToString().ToLower()" style="font-size: 0.85rem; padding: 6px 12px; border-radius: 20px;">@Model.Job.Status</span>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 12px;">
                     <button class="btn" style="border: 1px solid var(--border-color); background: white;">Export</button>
@@ -58,11 +61,11 @@
                     
                     @if (Model.Job.Summary != null)
                     {
-                        <div class="ai-content">
+                        <div class="ai-content summary-content">
                             @Model.Job.Summary.Summary
                         </div>
                         
-                        <div style="margin-top: 32px;">
+                        <div style="margin-top: 32px;" class="insight-card">
                             <div class="ai-section-title">Key Insights</div>
                             <ul class="key-point-list">
                                 @if (!string.IsNullOrEmpty(Model.Job.Summary.KeyPoints))
@@ -74,6 +77,27 @@
                                     }
                                 }
                             </ul>
+                        </div>
+
+                        <div style="margin-top: 32px;">
+                            <div class="ai-section-title">Action Items</div>
+                            @if (Model.Actions != null && Model.Actions.Any())
+                            {
+                                @foreach (var action in Model.Actions)
+                                {
+                                    <div class="action-item-card" style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 4px; margin-bottom: 8px; border: 1px solid var(--border-color);">
+                                        <div style="font-weight: 700; font-size: 0.9rem;">@action.Assignee</div>
+                                        <div style="font-size: 0.85rem; color: var(--text-primary); margin: 6px 0;">@action.TaskDescription</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">Priority: @action.Priority | Deadline: @action.Deadline</div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div style="color: var(--text-muted); font-style: italic; font-size: 0.85rem;">
+                                    No action items extracted.
+                                </div>
+                            }
                         </div>
                     }
                     else
