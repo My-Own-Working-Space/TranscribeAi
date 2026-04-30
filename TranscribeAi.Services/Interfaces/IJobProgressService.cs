@@ -7,6 +7,7 @@ namespace TranscribeAi.Services.Interfaces;
 public interface IJobProgressService
 {
     Task NotifyProgressAsync(Guid jobId, int percent, string step, string detail, CancellationToken ct = default);
+    Task NotifySegmentAsync(Guid jobId, SegmentDto segment, CancellationToken ct = default);
     Task NotifyCompletionAsync(Guid jobId, CancellationToken ct = default);
     Task NotifyFailureAsync(Guid jobId, string error, CancellationToken ct = default);
 }

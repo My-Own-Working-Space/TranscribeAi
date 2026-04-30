@@ -25,6 +25,13 @@ public sealed class SignalRJobProgressService : IJobProgressService
             .SendAsync("OnProgressUpdate", jobId, percent, step, detail, ct);
     }
 
+    public async Task NotifySegmentAsync(Guid jobId, SegmentDto segment, CancellationToken ct = default)
+    {
+        _logger.LogDebug("Sending SignalR segment for {JobId}: {Text}", jobId, segment.Text);
+        await _hubContext.Clients.Group($"job-{jobId}")
+            .SendAsync("OnSegmentReceived", jobId, segment, ct);
+    }
+
     public async Task NotifyCompletionAsync(Guid jobId, CancellationToken ct = default)
     {
         _logger.LogInformation("Sending SignalR completion for {JobId}", jobId);

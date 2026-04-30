@@ -9,29 +9,35 @@ namespace TranscribeAi.Services.Implementations;
 public sealed class GroqTranscriptionProvider : ITranscriptionProvider
 {
     private readonly HttpClient _httpClient;
+    private readonly GroqOptions _options;
     private readonly ILogger<GroqTranscriptionProvider> _logger;
-
     private const string TranscribeUrl = "https://api.groq.com/openai/v1/audio/transcriptions";
 
-    public GroqTranscriptionProvider(IHttpClientFactory httpClientFactory,
+    public GroqTranscriptionProvider(
+        IHttpClientFactory httpClientFactory,
+        Microsoft.Extensions.Options.IOptions<GroqOptions> options,
         ILogger<GroqTranscriptionProvider> logger)
     {
         _httpClient = httpClientFactory.CreateClient("GroqApi");
+        _options = options.Value;
         _logger = logger;
     }
 
     public async Task<TranscriptionResultDto> TranscribeAsync(string filePath,
-        string? language = null, CancellationToken ct = default)
+        string? language = null, Action<SegmentDto>? onSegmentTranscribed = null, CancellationToken ct = default)
     {
         var startTime = DateTime.UtcNow;
 
-        // ── Mock Mode for Testing ──
-        // If ApiKey is missing or placeholder, return fake results to allow E2E to pass
+        // ── Auth & Mock Validation ──
         var authHeader = _httpClient.DefaultRequestHeaders.Authorization;
-        if (authHeader == null || string.IsNullOrWhiteSpace(authHeader.Parameter) || authHeader.Parameter.Contains("YOUR_GROQ_API_KEY"))
+        var apiKey = authHeader?.Parameter;
+
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("YOUR_GROQ_API_KEY") || apiKey.Length < 10)
         {
-            _logger.LogInformation("Groq API Key missing/placeholder. Returning MOCK transcription result for E2E testing.");
-            await Task.Delay(2000, ct); // Simulate network latency
+            _logger.LogWarning("Groq API Key is missing or invalid. Authentication Header: {Status}. Using MOCK transcription.", 
+                authHeader == null ? "NULL" : "PRESENT_BUT_EMPTY_OR_PLACEHOLDER");
+            
+            await Task.Delay(2000, ct); 
 
             return new TranscriptionResultDto
             {
@@ -55,13 +61,14 @@ public sealed class GroqTranscriptionProvider : ITranscriptionProvider
         var fileContent = new StreamContent(fileStream);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("audio/mpeg");
         form.Add(fileContent, "file", Path.GetFileName(filePath));
-        form.Add(new StringContent("whisper-large-v3-turbo"), "model");
+        form.Add(new StringContent(_options.TranscriptionModel), "model");
         form.Add(new StringContent("verbose_json"), "response_format");
 
         if (!string.IsNullOrEmpty(language))
             form.Add(new StringContent(language), "language");
 
-        _logger.LogInformation("Sending audio to Groq STT API: {FileName}", Path.GetFileName(filePath));
+        _logger.LogInformation("Sending audio to Groq STT API (Model: {Model}): {FileName}", 
+            _options.TranscriptionModel, Path.GetFileName(filePath));
 
         var response = await _httpClient.PostAsync(TranscribeUrl, form, ct);
         response.EnsureSuccessStatusCode();

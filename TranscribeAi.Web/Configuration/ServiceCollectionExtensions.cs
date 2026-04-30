@@ -102,7 +102,17 @@ public static class ServiceCollectionExtensions
         // Services
         services.AddSingleton<IJobQueueService, JobQueueService>();
         services.AddScoped<ILlmService, GroqLlmService>();
-        services.AddScoped<ITranscriptionProvider, GroqTranscriptionProvider>();
+
+        var provider = config.GetSection("TranscribeAi:Provider").Value ?? "Groq";
+        if (provider.Equals("Local", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddScoped<ITranscriptionProvider, LocalWhisperProvider>();
+        }
+        else
+        {
+            services.AddScoped<ITranscriptionProvider, GroqTranscriptionProvider>();
+        }
+
         services.AddScoped<ITranscriptionService, TranscriptionService>();
         services.AddScoped<ISummaryService, SummaryService>();
         services.AddScoped<IChatService, ChatService>();
@@ -118,7 +128,8 @@ public static class ServiceCollectionExtensions
     {
         return HttpPolicyExtensions
             .HandleTransientHttpError()
-            .WaitAndRetryAsync(3, retryAttempt =>
-                TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+            .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            .WaitAndRetryAsync(5, retryAttempt =>
+                TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)) + TimeSpan.FromMilliseconds(new Random().Next(0, 100)));
     }
 }

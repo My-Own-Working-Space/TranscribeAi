@@ -19,6 +19,12 @@ public class TranscriptionJob
     [MaxLength(500)]
     public string? OriginalFilename { get; set; }
 
+    [MaxLength(255)]
+    public string? ProjectName { get; set; }
+
+    [MaxLength(2000)]
+    public string? Description { get; set; }
+
     [MaxLength(1000)]
     public string? StoragePath { get; set; }
 

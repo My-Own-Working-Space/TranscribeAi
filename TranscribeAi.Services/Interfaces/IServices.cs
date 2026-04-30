@@ -24,6 +24,7 @@ public interface ITranscriptionProvider
 {
     /// <summary>Transcribe an audio file and return structured results.</summary>
     Task<TranscriptionResultDto> TranscribeAsync(string filePath, string? language = null,
+        Action<SegmentDto>? onSegmentTranscribed = null,
         CancellationToken ct = default);
 }
 
@@ -33,6 +34,7 @@ public interface ITranscriptionProvider
 public interface ITranscriptionService
 {
     Task<TranscriptionResultDto> TranscribeFileAsync(string filePath, string? language = null,
+        Action<SegmentDto>? onSegmentTranscribed = null,
         CancellationToken ct = default);
 }
 

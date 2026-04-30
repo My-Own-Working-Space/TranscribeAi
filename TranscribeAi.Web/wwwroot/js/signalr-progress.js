@@ -16,7 +16,66 @@ if (typeof signalR !== 'undefined' && typeof jobId !== 'undefined') {
     const progressDetail = document.getElementById('progressDetail');
     const jobStatusBadge = document.getElementById('jobStatusBadge');
 
-    // ── Hub Event Handlers ──
+    const mediaPlayer = document.getElementById('mediaPlayer');
+    const transcriptArea = document.getElementById('transcriptArea');
+
+    // ── Click to Seek ──
+    document.addEventListener('click', (e) => {
+        const timestamp = e.target.closest('.timestamp');
+        if (timestamp && mediaPlayer) {
+            const startTime = parseFloat(timestamp.dataset.start);
+            if (!isNaN(startTime)) {
+                mediaPlayer.currentTime = startTime;
+                mediaPlayer.play();
+                
+                // Highlight active segment
+                document.querySelectorAll('.segment').forEach(s => s.classList.remove('active-segment'));
+                timestamp.closest('.segment').classList.add('active-segment');
+            }
+        }
+    });
+
+    connection.on("OnSegmentReceived", (jId, segment) => {
+        if (jId !== jobId || !transcriptArea) return;
+
+        // Remove placeholder
+        const placeholder = transcriptArea.querySelector('h3');
+        if (placeholder && placeholder.textContent.includes('progress')) {
+            transcriptArea.innerHTML = '';
+        }
+
+        const segmentDiv = document.createElement('div');
+        segmentDiv.className = 'segment';
+        segmentDiv.style.opacity = '0';
+        segmentDiv.style.transition = 'opacity 0.5s ease';
+        
+        // Format MM:SS
+        const minutes = Math.floor(segment.start / 60);
+        const seconds = Math.floor(segment.start % 60);
+        const timestamp = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        segmentDiv.innerHTML = `
+            <div class="speaker-col">
+                <div class="speaker-tag">Speaker</div>
+                <div class="timestamp" data-start="${segment.start}" style="cursor: pointer; color: var(--accent-primary); font-weight: 700;">
+                    ${timestamp}
+                </div>
+            </div>
+            <div class="text-col">
+                ${segment.text}
+            </div>
+        `;
+        
+        transcriptArea.appendChild(segmentDiv);
+        setTimeout(() => segmentDiv.style.opacity = '1', 10);
+        
+        // Only auto-scroll if user is near bottom
+        const threshold = 150;
+        const isAtBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - threshold);
+        if (isAtBottom) {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    });
 
     connection.on("OnProgressUpdate", (jId, percent, step, detail) => {
         if (jId !== jobId) return;

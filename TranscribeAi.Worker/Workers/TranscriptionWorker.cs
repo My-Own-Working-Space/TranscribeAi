@@ -70,7 +70,11 @@ public sealed class TranscriptionWorker : BackgroundService
 
             // ── STEP 1: Transcription ──
             await _progress.NotifyProgressAsync(jobId, 15, "Transcribing", "Analyzing audio with Whisper Turbo...", ct);
-            var result = await transcription.TranscribeFileAsync(request.FilePath, request.Language, ct);
+            var result = await transcription.TranscribeFileAsync(
+                request.FilePath, 
+                request.Language, 
+                segment => _progress.NotifySegmentAsync(jobId, segment, ct).Wait(ct), 
+                ct);
 
             job.Transcript = result.FullText;
             job.SegmentsJson = JsonSerializer.Serialize(result.Segments);
@@ -102,7 +106,7 @@ public sealed class TranscriptionWorker : BackgroundService
             await _progress.NotifyCompletionAsync(jobId, ct);
             _logger.LogInformation("Successfully completed job {JobId}", jobId);
 
-            if (File.Exists(request.FilePath)) File.Delete(request.FilePath);
+            // if (File.Exists(request.FilePath)) File.Delete(request.FilePath);
         }
         catch (Exception ex)
         {

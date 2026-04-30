@@ -42,15 +42,13 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // ── Database + Identity + Application Services ──
-// Map legacy DATABASE_URL if present (Supabase/Render style)
-var databaseUrl = builder.Configuration["DATABASE_URL"];
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL") ?? builder.Configuration["DATABASE_URL"];
 var connectionString = !string.IsNullOrWhiteSpace(databaseUrl) 
                       ? databaseUrl 
                       : builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
 {
-    // Convert postgres://user:pass@host:port/db to Npgsql format
     var uri = new Uri(connectionString);
     var userInfo = uri.UserInfo.Split(':');
     connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
@@ -59,8 +57,21 @@ if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("post
 builder.Services.AddDatabase(builder.Configuration, connectionString);
 builder.Services.AddIdentityServices();
 
-// Map legacy GROQ_API_KEY
-var groqApiKey = builder.Configuration["GROQ_API_KEY"] ?? builder.Configuration["Groq:ApiKey"];
+// Groq API Key Diagnostic
+var groqApiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY") 
+                 ?? Environment.GetEnvironmentVariable("Groq__ApiKey")
+                 ?? builder.Configuration["Groq:ApiKey"];
+
+if (string.IsNullOrEmpty(groqApiKey))
+{
+    Log.Warning("Startup: GROQ_API_KEY not found in environment or config. System will run in MOCK mode.");
+}
+else
+{
+    Log.Information("Startup: GROQ_API_KEY loaded (Length: {Length}, Starts with: {Prefix}...).", 
+        groqApiKey.Length, groqApiKey[..Math.Min(4, groqApiKey.Length)]);
+}
+
 builder.Services.AddApplicationServices(builder.Configuration, groqApiKey);
 
 // ── Razor Pages + SignalR ──

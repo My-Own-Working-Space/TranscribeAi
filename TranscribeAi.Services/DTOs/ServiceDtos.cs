@@ -100,6 +100,8 @@ public sealed record JobListItemDto
     public Guid Id { get; init; }
     public string Status { get; init; } = string.Empty;
     public string? OriginalFilename { get; init; }
+    public string? ProjectName { get; init; }
+    public string? Description { get; init; }
     public int FileSizeBytes { get; init; }
     public double DurationSeconds { get; init; }
     public double OverallConfidence { get; init; }

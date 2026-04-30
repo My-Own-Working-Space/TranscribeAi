@@ -62,3 +62,4 @@ cookies.txt
 temp_uploads/
 TranscribeAi.Web/temp_uploads/
 .config/
+whisper-vi-backup-*/

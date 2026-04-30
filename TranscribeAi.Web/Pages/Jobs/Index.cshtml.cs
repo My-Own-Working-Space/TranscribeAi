@@ -33,6 +33,8 @@ public class IndexModel : PageModel
             Id = j.Id,
             Status = j.Status.ToString(),
             OriginalFilename = j.OriginalFilename,
+            ProjectName = j.ProjectName ?? j.OriginalFilename,
+            Description = j.Description,
             FileSizeBytes = j.FileSizeBytes,
             DurationSeconds = j.DurationSeconds,
             OverallConfidence = j.OverallConfidence,
@@ -42,6 +44,20 @@ public class IndexModel : PageModel
             HasSummary = j.Summary != null,
             CreatedAt = j.CreatedAt,
             CompletedAt = j.CompletedAt
-        }).ToList();
+        }).OrderByDescending(j => j.CreatedAt).ToList();
+    }
+
+    public async Task<IActionResult> OnPostDeleteAsync(Guid id)
+    {
+        var userId = _userManager.GetUserId(User);
+        var job = await _uow.TranscriptionJobs.GetByIdAsync(id);
+
+        if (job != null && job.UserId == userId)
+        {
+            _uow.TranscriptionJobs.Remove(job);
+            await _uow.SaveChangesAsync();
+        }
+
+        return RedirectToPage();
     }
 }

@@ -12,21 +12,47 @@
                 <div>
                     <a asp-page="/Jobs/Index" style="text-decoration: none; font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 12px; display: block;">← Back to Projects</a>
                     <div style="display: flex; align-items: center; gap: 16px;">
-                        <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 0;">@Model.Job.OriginalFilename</h1>
+                        <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 0;">@Model.Job.ProjectName</h1>
                         <span id="jobStatusBadge" class="badge badge-@Model.Job.Status.ToString().ToLower()" style="font-size: 0.85rem; padding: 6px 12px; border-radius: 20px;">@Model.Job.Status</span>
                     </div>
+                    @if (!string.IsNullOrEmpty(Model.Job.Description))
+                    {
+                        <p style="color: var(--text-muted); margin-top: 8px; font-size: 0.95rem;">@Model.Job.Description</p>
+                    }
                 </div>
                 <div style="display: flex; gap: 12px;">
-                    <button class="btn" style="border: 1px solid var(--border-color); background: white;">Export</button>
-                    <button class="btn btn-primary">Share</button>
+                    <div class="dropdown">
+                        <button class="btn" style="border: 1px solid var(--border-color); background: white;">Export</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="details-grid">
-            <!-- ═══ Transcript Column ═══ -->
-            <div class="transcript-area">
-                @if (string.IsNullOrEmpty(Model.Job.Transcript))
+            <!-- ═══ Main Content Column ═══ -->
+            <div class="transcript-area" id="transcriptArea">
+                <!-- ═══ Media Header (Sticky) ═══ -->
+                <div class="media-header">
+                    @{
+                        var ext = System.IO.Path.GetExtension(Model.Job.StoragePath ?? "").ToLower();
+                        var isVideo = ext == ".mp4" || ext == ".mkv" || ext == ".webm";
+                    }
+                    @if (isVideo)
+                    {
+                        <video id="mediaPlayer" controls style="width: 100%; border-radius: 8px; background: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                            <source src="@Url.Page("./Details", "File", new { id = Model.Job.Id })" type="video/mp4">
+                        </video>
+                    }
+                    else
+                    {
+                        <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <audio id="mediaPlayer" controls style="width: 100%;">
+                                <source src="@Url.Page("./Details", "File", new { id = Model.Job.Id })" type="audio/mpeg">
+                            </audio>
+                        </div>
+                    }
+                </div>
+                @if (!Model.Segments.Any() && string.IsNullOrEmpty(Model.Job.Transcript))
                 {
                     <div style="padding: 100px 0; text-align: center;">
                         <h3 style="color: var(--text-muted);">Transcription in progress...</h3>
@@ -35,16 +61,17 @@
                 }
                 else
                 {
-                    <!-- Mock segments if actual segments aren't parsed yet, otherwise use real data -->
-                    @foreach (var line in Model.Job.Transcript.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                    @foreach (var segment in Model.Segments)
                     {
                         <div class="segment">
                             <div class="speaker-col">
                                 <div class="speaker-tag">Speaker</div>
-                                <div class="timestamp">00:00</div>
+                                <div class="timestamp" data-start="@segment.Start" style="cursor: pointer; color: var(--accent-primary); font-weight: 700;">
+                                    @TimeSpan.FromSeconds(segment.Start).ToString(@"mm\:ss")
+                                </div>
                             </div>
                             <div class="text-col">
-                                @line
+                                @segment.Text
                             </div>
                         </div>
                     }
@@ -115,6 +142,26 @@
 <style>
     @@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     .app-main { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+    
+    .segment { 
+        padding: 16px; 
+        border-radius: 8px; 
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .segment:hover { 
+        background: rgba(var(--accent-primary-rgb), 0.03); 
+    }
+    
+    .active-segment {
+        background: rgba(var(--accent-primary-rgb), 0.08) !important;
+        border-left-color: var(--accent-primary);
+    }
+    
+    .timestamp:hover {
+        text-decoration: underline;
+    }
 </style>
 
 @section Scripts {

@@ -12,6 +12,8 @@ public sealed class TranscribeAiOptions
     public int MaxFileSizeMb { get; set; } = 200;
     public string[] SupportedFormats { get; set; } = ["wav", "mp3", "flac", "ogg", "m4a", "mp4", "mkv", "webm"];
     public string TempUploadDir { get; set; } = "temp_uploads";
+    public string Provider { get; set; } = "Groq"; // Groq or Local
+    public string LocalWhisperUrl { get; set; } = "http://localhost:8000/transcribe";
 }
 
 /// <summary>

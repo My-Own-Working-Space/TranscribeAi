@@ -12,6 +12,16 @@
         </div>
 
         <form method="post" enctype="multipart/form-data" id="uploadForm">
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label asp-for="ProjectName" style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Project Name</label>
+                <input asp-for="ProjectName" class="form-input" placeholder="Give your project a name" style="border-radius: 4px;" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label asp-for="Description" style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Description (Optional)</label>
+                <textarea asp-for="Description" class="form-input" placeholder="What is this recording about?" style="border-radius: 4px; min-height: 80px; resize: vertical;"></textarea>
+            </div>
+
             <div class="form-group" style="margin-bottom: 32px;">
                 <label class="form-label" style="display: block; margin-bottom: 12px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: #555;">Media Source</label>
                 

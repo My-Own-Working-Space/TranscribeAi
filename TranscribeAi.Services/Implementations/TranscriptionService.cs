@@ -15,11 +15,11 @@ public sealed class TranscriptionService : ITranscriptionService
     }
 
     public async Task<TranscriptionResultDto> TranscribeFileAsync(string filePath,
-        string? language = null, CancellationToken ct = default)
+        string? language = null, Action<SegmentDto>? onSegmentTranscribed = null, CancellationToken ct = default)
     {
         _logger.LogInformation("Starting transcription for {FilePath}", filePath);
 
-        var result = await _provider.TranscribeAsync(filePath, language, ct);
+        var result = await _provider.TranscribeAsync(filePath, language, onSegmentTranscribed, ct);
 
         _logger.LogInformation(
             "Transcription complete: {SegmentCount} segments, {Duration}s audio, {Confidence} confidence",

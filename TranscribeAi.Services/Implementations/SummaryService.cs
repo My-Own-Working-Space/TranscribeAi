@@ -60,6 +60,8 @@ public sealed class SummaryService : ISummaryService
         // ── Step 2-3: Review → Refine loop ──
         for (int attempt = 0; attempt < MaxReviewPasses; attempt++)
         {
+            // Small delay to prevent 429 Too Many Requests from Groq
+            await Task.Delay(1500, ct); 
             _logger.LogInformation("[Agent:Reviewer] Pass {Pass} for job {JobId}", attempt + 1, jobId);
 
             var reviewInput = $"=== ORIGINAL TRANSCRIPT ===\n{text}\n\n=== AI SUMMARY TO REVIEW ===\n{JsonSerializer.Serialize(parsed)}";

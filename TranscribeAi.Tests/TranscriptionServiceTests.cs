@@ -38,7 +38,7 @@ namespace TranscribeAi.Tests
                 Segments = new List<SegmentDto>()
             };
 
-            _providerMock.Setup(p => p.TranscribeAsync(filePath, null, It.IsAny<CancellationToken>()))
+            _providerMock.Setup(p => p.TranscribeAsync(filePath, null, It.IsAny<Action<SegmentDto>>(), It.IsAny<CancellationToken>()))
                          .ReturnsAsync(expectedResult);
 
             // Act
@@ -47,7 +47,7 @@ namespace TranscribeAi.Tests
             // Assert
             Assert.NotNull(result);
             result.FullText.Should().Be("Sample text");
-            _providerMock.Verify(p => p.TranscribeAsync(filePath, null, It.IsAny<CancellationToken>()), Times.Once);
+            _providerMock.Verify(p => p.TranscribeAsync(filePath, null, It.IsAny<Action<SegmentDto>>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

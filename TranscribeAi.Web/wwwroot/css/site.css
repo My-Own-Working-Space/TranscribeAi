@@ -189,9 +189,10 @@ body {
 /* ── Transcription Details Page ── */
 .details-page { background: #ffffff; min-height: 100vh; padding-top: 20px; }
 .details-header { border-bottom: 1px solid var(--border-color); padding: 24px 0; margin-bottom: 40px; width: 100%; }
-.details-grid { display: grid; grid-template-columns: 1fr 380px; gap: 48px; width: 100%; }
+.details-grid { display: grid; grid-template-columns: 1fr 380px; gap: 48px; width: 100%; align-items: start; }
 
-.transcript-area { max-width: 800px; }
+.media-header { width: 100%; margin-bottom: 32px; position: sticky; top: 84px; z-index: 10; background: #fff; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+.transcript-area { width: 100%; }
 .segment { margin-bottom: 32px; display: flex; gap: 24px; }
 .speaker-col { min-width: 80px; text-align: right; }
 .speaker-tag { font-weight: 700; font-size: 0.85rem; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.05em; }

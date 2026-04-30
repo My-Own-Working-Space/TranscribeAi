@@ -50,6 +50,16 @@ public class CreateModel : PageModel
     public JobMode Mode { get; set; } = JobMode.Standard;
 
     [BindProperty]
+    [Display(Name = "Project Name")]
+    [StringLength(255)]
+    public string? ProjectName { get; set; }
+
+    [BindProperty]
+    [Display(Name = "Description")]
+    [StringLength(2000)]
+    public string? Description { get; set; }
+
+    [BindProperty]
     [Display(Name = "Language (Optional)")]
     [StringLength(10)]
     public string? Language { get; set; }
@@ -108,6 +118,8 @@ public class CreateModel : PageModel
             UserId = userId,
             Status = JobStatus.Queued,
             OriginalFilename = UploadedFile.FileName,
+            ProjectName = string.IsNullOrWhiteSpace(ProjectName) ? UploadedFile.FileName : ProjectName,
+            Description = Description,
             StoragePath = filePath,
             FileSizeBytes = (int)UploadedFile.Length,
             Mode = Mode
